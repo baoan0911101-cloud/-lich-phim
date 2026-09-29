@@ -1,4 +1,4 @@
-'use client';
+'use client';sadasdsadsadas
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
