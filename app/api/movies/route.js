@@ -1,5 +1,6 @@
 import { query } from '@/lib/db';
 
+// GET: lấy danh sách phim
 export async function GET() {
   try {
     const moviesResult = await query(
@@ -26,6 +27,7 @@ export async function GET() {
   }
 }
 
+// POST: thêm phim mới
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -40,8 +42,8 @@ export async function POST(request) {
     }
 
     await query(
-      `INSERT INTO movies (id, title, title_goc, poster, tags, total_duration, season, overview, telegram_url, messenger_url, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      `INSERT INTO movies (id, title, title_goc, poster, tags, total_duration, overview, telegram_url, messenger_url, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         movie.id,
         movie.title,
@@ -49,7 +51,6 @@ export async function POST(request) {
         movie.poster || null,
         movie.tags || [],
         movie.total_duration || null,
-        movie.season || null,
         movie.overview || null,
         movie.telegram_url || null,
         movie.messenger_url || null,
