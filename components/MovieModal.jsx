@@ -68,12 +68,12 @@ export default function MovieModal({ movie, onClose }) {
       className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-[modalFadeIn_0.3s_ease_both]"
       onClick={onClose}
     >
-      {/* WRAPPER NGOÀI — chứa nút X + khung modal */}
+      {/* WRAPPER NGOÀI */}
       <div
         className="relative w-full max-w-lg max-h-[90vh] animate-[modalScaleIn_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* NÚT ĐÓNG — GÓC TRÊN PHẢI, KHÔNG BỊ CẮT */}
+        {/* NÚT ĐÓNG */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -85,7 +85,7 @@ export default function MovieModal({ movie, onClose }) {
           ✕
         </button>
 
-        {/* KHUNG MODAL — overflow bên trong */}
+        {/* KHUNG MODAL */}
         <div className="w-full max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl bg-[#0f1729] border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.9)]">
           {/* ẢNH BANNER */}
           <div className="relative aspect-[16/9] overflow-hidden bg-[#151d2e] rounded-t-3xl">
@@ -200,6 +200,7 @@ export default function MovieModal({ movie, onClose }) {
               ▶ Xem chi tiết phim
             </Link>
 
+            {/* DANH SÁCH TẬP — BẤM ĐƯỢC */}
             {movie.seasons?.length > 0 && (
               <div className="mt-5">
                 <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
@@ -207,24 +208,59 @@ export default function MovieModal({ movie, onClose }) {
                 </h3>
 
                 <div className="grid grid-cols-2 gap-2">
-                  {movie.seasons.slice(0, 6).map((s, i) => (
-                    <div
-                      key={i}
-                      className="card-bg rounded-xl p-2.5 flex items-center gap-2"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-400/20 to-orange-500/20 border border-rose-400/30 flex items-center justify-center text-xs shrink-0">
-                        🎞
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-bold text-white truncate">
-                          {s.name}
+                  {movie.seasons.slice(0, 6).map((s, i) => {
+                    const isAvailable = !!s.facebook;
+                    const Wrapper = isAvailable ? 'a' : 'div';
+                    const wrapperProps = isAvailable
+                      ? {
+                          href: s.facebook,
+                          target: '_blank',
+                          rel: 'noopener noreferrer',
+                        }
+                      : {};
+
+                    return (
+                      <Wrapper
+                        key={i}
+                        {...wrapperProps}
+                        className={`card-bg rounded-xl p-2.5 flex items-center gap-2 transition-all duration-300 ${
+                          isAvailable
+                            ? 'cursor-pointer hover:border-rose-400/50 hover:bg-[#1a2540] hover:-translate-y-0.5 active:scale-[0.97] group'
+                            : 'opacity-60 cursor-not-allowed'
+                        }`}
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 transition-colors ${
+                            isAvailable
+                              ? 'bg-gradient-to-br from-rose-400/30 to-orange-500/30 border border-rose-400/50 group-hover:from-rose-400/50 group-hover:to-orange-500/50'
+                              : 'bg-gradient-to-br from-slate-400/10 to-slate-500/10 border border-slate-500/20'
+                          }`}
+                        >
+                          {isAvailable ? '▶' : '🎞'}
                         </div>
-                        <div className="text-[9px] text-slate-500 truncate">
-                          ⏱ {s.duration || 'Đang cập nhật'}
+                        <div className="flex-1 min-w-0">
+                          <div
+                            className={`text-[11px] font-bold truncate ${
+                              isAvailable
+                                ? 'text-white group-hover:text-rose-300 transition-colors'
+                                : 'text-slate-400'
+                            }`}
+                          >
+                            {s.name}
+                          </div>
+                          <div className="text-[9px] text-slate-500 truncate">
+                            {isAvailable ? (
+                              <span className="text-emerald-400 font-bold">
+                                ● Có thể xem
+                              </span>
+                            ) : (
+                              '⏱ Đang cập nhật'
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      </Wrapper>
+                    );
+                  })}
                 </div>
 
                 {movie.seasons.length > 6 && (
