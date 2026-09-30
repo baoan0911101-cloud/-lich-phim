@@ -292,9 +292,9 @@ export default function HomePage() {
                 Mới cập nhật
               </h2>
             </div>
-            <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
-              {newest.map((m, i) => (
-                <MovieCard key={m.id} movie={m} index={i} variant="row" />
+            <div className="flex flex-col gap-4">
+              {newest.slice(0, 5).map((m, i) => (
+                <MovieCard key={m.id} movie={m} index={i} />
               ))}
             </div>
           </section>
@@ -342,7 +342,7 @@ export default function HomePage() {
                 : `Thể loại: ${filter}`}
             </h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filtered.map((m, i) => (
                 <MovieCard key={m.id} movie={m} index={i} />
               ))}
