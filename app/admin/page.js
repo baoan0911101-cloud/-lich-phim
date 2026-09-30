@@ -17,6 +17,7 @@ export default function AdminPage() {
     title: '',
     title_goc: '',
     poster: '',
+    season: '',
     duration: '',
     tags: '',
     overview: '',
@@ -88,6 +89,7 @@ export default function AdminPage() {
       title: '',
       title_goc: '',
       poster: '',
+      season: '',
       duration: '',
       tags: '',
       overview: '',
@@ -108,6 +110,7 @@ export default function AdminPage() {
       title: m.title || '',
       title_goc: m.title_goc || '',
       poster: m.poster || '',
+      season: m.season || '',poster: movie.poster,
       duration: m.total_duration || '',
       tags: (m.tags || []).join(', '),
       overview: m.overview || '',
@@ -204,6 +207,7 @@ export default function AdminPage() {
       title: movie.title,
       title_goc: movie.title_goc,
       poster: movie.poster,
+      season: movie.season,
       tags: movie.tags.split(',').map((t) => t.trim()).filter(Boolean),
       total_duration: movie.duration,
       overview: movie.overview,
@@ -257,6 +261,7 @@ export default function AdminPage() {
             title: '',
             title_goc: '',
             poster: '',
+            season: '',
             duration: '',
             tags: '',
             overview: '',
@@ -683,6 +688,16 @@ function MovieForm({
           onChange={(e) => setMovie({ ...movie, poster: e.target.value })}
           className={input}
           placeholder="https://... hoặc /posters/abc.jpg"
+        />
+      </div>
+            
+      <div>
+        <label className={label}>Mùa (VD: Mùa 9, Phần 2...)</label>
+        <input
+          value={movie.season}
+          onChange={(e) => setMovie({ ...movie, season: e.target.value })}
+          className={input}
+          placeholder="Mùa 9"
         />
       </div>
 
