@@ -42,13 +42,14 @@ export async function POST(request) {
     }
 
     await query(
-      `INSERT INTO movies (id, title, title_goc, poster, tags, total_duration, overview, telegram_url, messenger_url, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      `INSERT INTO movies (id, title, title_goc, poster, season, tags, total_duration, overview, telegram_url, messenger_url, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
         movie.id,
         movie.title,
         movie.title_goc || null,
         movie.poster || null,
+        movie.season || null,
         movie.tags || [],
         movie.total_duration || null,
         movie.overview || null,
