@@ -102,14 +102,14 @@ export default function MovieCard({ movie, index = 0 }) {
 
           {/* BADGE MÙA — góc trên trái */}
           {movie.season && (
-            <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur text-[9px] font-bold text-amber-300 z-10">
+            <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/60 backdrop-blur text-[8px] font-bold text-amber-300 z-10">
               {movie.season}
             </div>
           )}
 
           {/* THỜI LƯỢNG — góc dưới trái */}
           {movie.total_duration && (
-            <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 flex items-center gap-0.5 z-10">
+            <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded-full bg-black/70 backdrop-blur text-[8px] font-bold text-amber-300 flex items-center gap-0.5 z-10">
               ⏱ {movie.total_duration}
             </div>
           )}
@@ -118,12 +118,12 @@ export default function MovieCard({ movie, index = 0 }) {
           <button
             onClick={toggleLike}
             aria-label="Lưu phim"
-            className="absolute top-1.5 right-1.5 z-20 w-6 h-6 rounded-full flex items-center justify-center bg-black/50 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
+            className="absolute top-1 right-1 z-20 w-5 h-5 rounded-full flex items-center justify-center bg-black/50 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
             style={{ padding: 0 }}
           >
             <svg
-              width="11"
-              height="11"
+              width="9"
+              height="9"
               viewBox="0 0 24 24"
               fill={liked ? '#fb7185' : 'none'}
               stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.9)'}
@@ -146,19 +146,19 @@ export default function MovieCard({ movie, index = 0 }) {
       {/* TEXT BÊN DƯỚI ẢNH */}
       <Link href={`/movie/${movie.id}`} className="block mt-1.5">
         {/* Tên phim */}
-        <h3 className="text-[12px] font-semibold line-clamp-2 leading-snug text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
+        <h3 className="text-[11px] font-semibold line-clamp-2 leading-tight text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
           {movie.title}
         </h3>
 
-        {/* Tên gốc — GIỮ LẠI */}
-        <p className="text-[9px] text-slate-500 line-clamp-1 mt-0.5 mb-1">
+        {/* Tên gốc */}
+        <p className="text-[8px] text-slate-500 line-clamp-1 mt-0.5 mb-0.5">
           {movie.title_goc}
         </p>
 
         {/* Mùa + Cập nhật — cùng hàng */}
         <div className="flex items-center justify-between gap-1">
           {movie.season ? (
-            <span className="text-[9px] font-bold text-rose-300 bg-rose-500/10 px-1 py-0.5 rounded shrink-0">
+            <span className="text-[8px] font-bold text-rose-300 bg-rose-500/10 px-1 py-0.5 rounded shrink-0 truncate max-w-[40px]">
               {movie.season}
             </span>
           ) : (
@@ -166,15 +166,12 @@ export default function MovieCard({ movie, index = 0 }) {
           )}
 
           <span
-            className="text-[9px] font-medium flex items-center gap-0.5 shrink-0"
+            className="text-[8px] font-medium shrink-0"
             title={formatFullDate(movie.updated_at || movie.created_at)}
           >
-            <span className="text-slate-500">Cập nhật:</span>
             <span
               className={`font-bold px-1 py-0.5 rounded ${
-                dateColor === 'emerald'
-                  ? 'text-amber-300 bg-amber-500/15 border border-amber-500/40'
-                  : dateColor === 'amber'
+                dateColor === 'emerald' || dateColor === 'amber'
                   ? 'text-amber-300 bg-amber-500/15 border border-amber-500/40'
                   : 'text-slate-300 bg-slate-500/10 border border-slate-500/30'
               }`}
