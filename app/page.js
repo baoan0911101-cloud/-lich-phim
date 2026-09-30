@@ -4,7 +4,7 @@ import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
 
 // ═══════════════════════════════════════════
-// NÚT TIM — KHÔNG TỰ ĐỊNH VỊ, WRAPPER LÀM
+// NÚT TIM — dùng chung cho Featured + sideMovies
 // ═══════════════════════════════════════════
 function HeartButton({ movieId, savedMovies, setSavedMovies }) {
   const liked = savedMovies.includes(movieId);
@@ -31,20 +31,19 @@ function HeartButton({ movieId, savedMovies, setSavedMovies }) {
       aria-label="Lưu phim"
       className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 btn-tap hover:scale-110 active:scale-95 ${
         liked
-          ? 'bg-black/40 border border-rose-400/40 shadow-[0_0_8px_rgba(251,113,133,0.4)]'
-          : 'bg-black/35 border border-white/15'
+          ? 'bg-rose-500 shadow-[0_0_12px_rgba(251,113,133,0.8)]'
+          : 'bg-black/60 hover:bg-black/80 border border-white/20'
       }`}
     >
       <svg
-        width="15"
-        height="15"
+        width="16"
+        height="16"
         viewBox="0 0 24 24"
-        fill={liked ? '#fb7185' : 'none'}
-        stroke="#fb7185"
+        fill={liked ? '#ffffff' : 'none'}
+        stroke={liked ? '#ffffff' : '#fb7185'}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={liked ? 'drop-shadow-[0_0_5px_rgba(251,113,133,0.8)]' : ''}
       >
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
       </svg>
@@ -128,7 +127,10 @@ export default function HomePage() {
       <div className="px-4 py-8 max-w-6xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-[2/3] rounded-2xl bg-[#151d2e] animate-pulse" />
+            <div
+              key={i}
+              className="aspect-[2/3] rounded-2xl bg-[#151d2e] animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -137,6 +139,7 @@ export default function HomePage() {
 
   return (
     <div className="md:flex md:gap-6 md:px-6 md:py-6">
+      {/* SIDEBAR (PC) */}
       <aside className="hidden md:block w-56 shrink-0">
         <div className="sticky top-20 card-bg rounded-2xl p-3 max-h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar">
           <div className="flex items-center gap-2 px-3 py-2 mb-2 border-b border-[#1e293b]">
@@ -186,7 +189,9 @@ export default function HomePage() {
         </div>
       </aside>
 
+      {/* MAIN CONTENT */}
       <div className="flex-1 px-4 pt-4 pb-6 md:p-0 md:min-w-0">
+        {/* SEARCH + ĐÃ LƯU */}
         <section className="anim-fadeInUp d-1 mb-5">
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -264,11 +269,11 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
                   {/* Badge HOT — góc trên trái */}
-                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg z-20">
+                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg z-10">
                     🔥 HOT
                   </div>
 
-                  {/* Wrapper tim — góc trên phải */}
+                  {/* Nút tim — đồng bộ top-3 right-3 với HOT */}
                   <div className="absolute top-3 right-3 z-20">
                     <HeartButton
                       movieId={featured.id}
@@ -296,7 +301,7 @@ export default function HomePage() {
                 </div>
               </Link>
 
-              {/* 2 phim nhỏ */}
+              {/* 2 phim nhỏ — nút tim top-3 right-3 */}
               {sideMovies.map((m) => (
                 <Link
                   key={m.id}
@@ -311,8 +316,8 @@ export default function HomePage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
 
-                    {/* Wrapper tim — góc trên phải */}
-                    <div className="absolute top-2 right-2 z-20">
+                    {/* Nút tim */}
+                    <div className="absolute top-3 right-3 z-20">
                       <HeartButton
                         movieId={m.id}
                         savedMovies={savedMovies}
