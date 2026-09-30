@@ -69,7 +69,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
     >
-      {/* WRAPPER BAO POSTER + TIM (không bao tiêu đề) */}
+      {/* ✅ WRAPPER RELATIVE — CHỈ BAO POSTER + TIM, KHÔNG BAO TIÊU ĐỀ */}
       <div className="relative">
         <Link href={`/movie/${movie.id}`} className="block">
           <div
@@ -108,7 +108,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </div>
         </Link>
 
-        {/* Nút tim — NẰM TRONG wrapper relative, sẽ ở đúng góc trên phải poster */}
+        {/* ✅ NÚT TIM — absolute theo wrapper relative → luôn ở góc trên phải poster */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
@@ -135,6 +135,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </svg>
         </button>
       </div>
+      {/* ✅ ĐÓNG WRAPPER — TIÊU ĐỀ NẰM NGOÀI */}
 
       {/* Tiêu đề — NGOÀI wrapper relative */}
       <Link href={`/movie/${movie.id}`} className="block mt-2">
