@@ -71,7 +71,6 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
     >
       {/* ============================================ */}
       {/* WRAPPER RELATIVE — BAO POSTER + TIM          */}
-      {/* Dùng inline style để KHÔNG THỂ bị sai        */}
       {/* ============================================ */}
       <div style={{ position: 'relative', display: 'block' }}>
         <Link href={`/movie/${movie.id}`} className="block">
@@ -113,18 +112,18 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
         </Link>
 
         {/* ============================================ */}
-        {/* NÚT TIM — INLINE STYLE, CHẮC CHẮN GÓC TRÊN PHẢI */}
+        {/* NÚT TIM — 32px, GÓC TRÊN PHẢI POSTER          */}
         {/* ============================================ */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
           style={{
             position: 'absolute',
-            top: '12px',
-            right: '12px',
+            top: '10px',
+            right: '10px',
             zIndex: 30,
-            width: '40px',
-            height: '40px',
+            width: '32px',
+            height: '32px',
             borderRadius: '9999px',
             display: 'flex',
             alignItems: 'center',
@@ -141,8 +140,8 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
           <svg
-            width="20"
-            height="20"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill={liked ? '#fb7185' : 'none'}
             stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.85)'}
