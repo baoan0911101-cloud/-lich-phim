@@ -69,9 +69,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
     >
-      {/* ============================================ */}
-      {/* WRAPPER RELATIVE — BAO POSTER + TIM          */}
-      {/* ============================================ */}
+      {/* WRAPPER RELATIVE — BAO POSTER + TIM */}
       <div style={{ position: 'relative', display: 'block' }}>
         <Link href={`/movie/${movie.id}`} className="block">
           <div
@@ -111,19 +109,17 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </div>
         </Link>
 
-        {/* ============================================ */}
-        {/* NÚT TIM — 32px, GÓC TRÊN PHẢI POSTER          */}
-        {/* ============================================ */}
+        {/* NÚT TIM — 24px, GÓC TRÊN PHẢI POSTER */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
           style={{
             position: 'absolute',
-            top: '10px',
-            right: '10px',
+            top: '6px',
+            right: '6px',
             zIndex: 30,
-            width: '28px',
-            height: '29px',
+            width: '24px',
+            height: '24px',
             borderRadius: '9999px',
             display: 'flex',
             alignItems: 'center',
@@ -136,12 +132,12 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
             transition: 'transform 0.3s ease',
             padding: 0,
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.15)')}
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
           <svg
-            width="14"
-            height="14"
+            width="12"
+            height="12"
             viewBox="0 0 24 24"
             fill={liked ? '#fb7185' : 'none'}
             stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.85)'}
@@ -152,7 +148,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
               transition: 'all 0.3s',
               transform: liked ? 'scale(1.1)' : 'scale(1)',
               filter: liked
-                ? 'drop-shadow(0 0 6px rgba(251,113,133,0.9))'
+                ? 'drop-shadow(0 0 5px rgba(251,113,133,0.9))'
                 : 'none',
             }}
           >
@@ -160,10 +156,8 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </svg>
         </button>
       </div>
-      {/* ============================================ */}
-      {/* ĐÓNG WRAPPER — TIÊU ĐỀ NẰM NGOÀI              */}
-      {/* ============================================ */}
 
+      {/* Tiêu đề — NGOÀI wrapper */}
       <Link href={`/movie/${movie.id}`} className="block mt-2">
         <h3 className="text-[13px] font-semibold line-clamp-2 leading-snug text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
           {movie.title}
