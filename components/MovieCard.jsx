@@ -1,17 +1,15 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   formatRelativeDate,
   formatFullDate,
   getDateBadgeColor,
 } from '@/lib/formatDate';
 
-export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
+export default function MovieCard({ movie, index = 0 }) {
   const delay = Math.min(index * 0.05, 0.4);
   const [liked, setLiked] = useState(false);
-  const [isHover, setIsHover] = useState(false);
-  const cardRef = useRef(null);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
@@ -26,24 +24,6 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
     window.addEventListener('savedMoviesChanged', handleChange);
     return () => window.removeEventListener('savedMoviesChanged', handleChange);
   }, [movie.id]);
-
-  const handleMouseMove = (e) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    card.style.setProperty('--rx', `${y * 8}deg`);
-    card.style.setProperty('--ry', `${-x * 8}deg`);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHover(false);
-    const card = cardRef.current;
-    if (!card) return;
-    card.style.setProperty('--rx', '0deg');
-    card.style.setProperty('--ry', '0deg');
-  };
 
   const toggleLike = (e) => {
     e.preventDefault();
@@ -64,139 +44,100 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
     window.dispatchEvent(new Event('savedMoviesChanged'));
   };
 
-  const sizeClass = variant === 'row' ? 'w-[130px] shrink-0' : 'w-full';
   const dateColor = getDateBadgeColor(movie.updated_at || movie.created_at);
 
   return (
     <div
-      className={`block anim-fadeInUp group ${sizeClass}`}
+      className="block anim-fadeInUp group"
       style={{ animationDelay: `${delay}s` }}
-      onMouseEnter={() => setIsHover(true)}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
     >
-      {/* WRAPPER RELATIVE — BAO POSTER + TIM */}
-      <div style={{ position: 'relative', display: 'block' }}>
-        <Link href={`/movie/${movie.id}`} className="block">
-          <div
-            ref={cardRef}
-            className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#151d2e] transition-all duration-500"
-            style={{
-              position: 'relative',
-              transform: isHover
-                ? 'perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px) scale(1.02)'
-                : 'perspective(800px) rotateX(0) rotateY(0) translateY(0) scale(1)',
-              transformStyle: 'preserve-3d',
-              boxShadow: isHover
-                ? '0 20px 40px rgba(0,0,0,0.6), 0 0 20px rgba(251,113,133,0.3)'
-                : '0 4px 12px rgba(0,0,0,0.3)',
-            }}
+      {/* ẢNH NGANG + BADGE BÊN TRONG */}
+      <Link href={`/movie/${movie.id}`} className="block">
+        <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-[#151d2e]">
+          {/* ẢNH */}
+          <img
+            src={movie.poster}
+            alt={movie.title}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+
+          {/* Gradient nhẹ phía dưới để badge nổi */}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+
+          {/* BADGE MÙA — góc trên trái */}
+          {movie.season && (
+            <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur text-[10px] font-bold text-amber-300 border border-amber-400/20 z-10">
+              {movie.season}
+            </div>
+          )}
+
+          {/* THỜI LƯỢNG — góc dưới trái */}
+          {movie.total_duration && (
+            <div className="absolute bottom-2.5 left-2.5 px-2 py-1 rounded-full bg-black/70 backdrop-blur text-[10px] font-bold text-amber-300 flex items-center gap-1 z-10">
+              ⏱ {movie.total_duration}
+            </div>
+          )}
+
+          {/* NÚT TIM — góc trên phải */}
+          <button
+            onClick={toggleLike}
+            aria-label="Lưu phim"
+            className="absolute top-2.5 right-2.5 z-20 w-7 h-7 rounded-full flex items-center justify-center bg-black/50 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
+            style={{ padding: 0 }}
           >
-            <img
-              src={movie.poster}
-              alt={movie.title}
-              loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill={liked ? '#fb7185' : 'none'}
+              stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.9)'}
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                transition: 'all 0.3s',
+                filter: liked
+                  ? 'drop-shadow(0 0 5px rgba(251,113,133,0.9))'
+                  : 'none',
+              }}
+            >
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+          </button>
+        </div>
+      </Link>
 
-            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-
-            {movie.season && (
-              <div className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur text-[10px] font-bold text-amber-300 z-10">
-                {movie.season}
-              </div>
-            )}
-
-            {movie.total_duration && (
-              <div className="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-black/70 backdrop-blur text-[10px] font-bold text-amber-300 flex items-center gap-1">
-                ⏱ {movie.total_duration}
-              </div>
-            )}
-          </div>
-        </Link>
-
-        {/* NÚT TIM — 24px, GÓC TRÊN PHẢI POSTER */}
-        <button
-          onClick={toggleLike}
-          aria-label="Lưu phim"
-          style={{
-            position: 'absolute',
-            top: '6px',
-            right: '6px',
-            zIndex: 30,
-            width: '24px',
-            height: '24px',
-            borderRadius: '9999px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0, 0, 0, 0.45)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            cursor: 'pointer',
-            transition: 'transform 0.3s ease',
-            padding: 0,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.15)')}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill={liked ? '#fb7185' : 'none'}
-            stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.85)'}
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{
-              transition: 'all 0.3s',
-              transform: liked ? 'scale(1.1)' : 'scale(1)',
-              filter: liked
-                ? 'drop-shadow(0 0 5px rgba(251,113,133,0.9))'
-                : 'none',
-            }}
-          >
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Tiêu đề + Mùa + Ngày cập nhật */}
+      {/* TEXT BÊN DƯỚI ẢNH */}
       <Link href={`/movie/${movie.id}`} className="block mt-2">
-        <h3 className="text-[13px] font-semibold line-clamp-2 leading-snug text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
+        {/* Tên phim */}
+        <h3 className="text-[14px] font-black line-clamp-2 leading-snug text-white group-hover:text-rose-300 transition-colors duration-300">
           {movie.title}
         </h3>
-        <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5 mb-1">
-          {movie.title_goc}
-        </p>
 
-        {/* Badge Mùa + Cập nhật */}
-        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+        {/* Mùa + Cập nhật — cùng hàng */}
+        <div className="flex items-center justify-between gap-2 mt-1.5">
           {movie.season ? (
-            <span className="text-[10px] font-bold text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded">
+            <span className="text-[11px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0">
               {movie.season}
             </span>
           ) : (
-            <span />
+            <span className="shrink-0" />
           )}
 
           <span
-            className="text-[10px] font-medium flex items-center gap-1"
+            className="text-[11px] font-medium flex items-center gap-1 shrink-0"
             title={formatFullDate(movie.updated_at || movie.created_at)}
           >
             <span className="text-slate-500">Cập nhật:</span>
             <span
-              className={`font-bold ${
-                dateColor === 'emerald'
-                  ? 'text-emerald-400'
-                  : dateColor === 'amber'
-                  ? 'text-amber-400'
-                  : 'text-slate-400'
+              className={`font-bold px-1.5 py-0.5 rounded border ${
+                dateColor === 'emerald' || dateColor === 'amber'
+                  ? 'text-amber-300 bg-amber-500/15 border-amber-500/40'
+                  : 'text-slate-300 bg-slate-500/10 border-slate-500/30'
               }`}
             >
-              {formatRelativeDate(movie.updated_at || movie.created_at)}
+              {formatRelativeDate(movie.updated_at || movie.created_at).toUpperCase()}
             </span>
           </span>
         </div>
