@@ -47,7 +47,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
       className={`block card-hover anim-fadeInUp group ${sizeClass}`}
       style={{ animationDelay: `${delay}s` }}
     >
-      {/* Poster wrapper */}
+      {/* Poster wrapper — relative, chứa nút tim */}
       <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-[#151d2e]">
         <img
           src={movie.poster}
@@ -64,7 +64,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </div>
         )}
 
-        {/* Nút tim — TRONG poster wrapper, góc trên phải */}
+        {/* Nút tim — NẰM TRONG poster wrapper */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
@@ -95,7 +95,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
         )}
       </div>
 
-      {/* Tiêu đề */}
+      {/* Tiêu đề dưới poster */}
       <div className="mt-2">
         <h3 className="text-[13px] font-semibold line-clamp-2 leading-snug text-slate-100 group-hover:text-rose-300 transition-colors">
           {movie.title}
