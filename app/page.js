@@ -4,7 +4,7 @@ import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
 
 // ═══════════════════════════════════════════
-// NÚT TIM — dùng chung cho Featured + sideMovies
+// NÚT TIM — có hiệu ứng scale khi bấm
 // ═══════════════════════════════════════════
 function HeartButton({ movieId, savedMovies, setSavedMovies }) {
   const liked = savedMovies.includes(movieId);
@@ -31,7 +31,7 @@ function HeartButton({ movieId, savedMovies, setSavedMovies }) {
       aria-label="Lưu phim"
       className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 btn-tap hover:scale-110 active:scale-95 ${
         liked
-          ? 'bg-rose-500 shadow-[0_0_12px_rgba(251,113,133,0.8)]'
+          ? 'bg-rose-500 shadow-[0_0_12px_rgba(251,113,133,0.8)] scale-105'
           : 'bg-black/60 hover:bg-black/80 border border-white/20'
       }`}
     >
@@ -44,6 +44,9 @@ function HeartButton({ movieId, savedMovies, setSavedMovies }) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className={`transition-transform duration-300 ${
+          liked ? 'scale-110' : 'scale-100'
+        }`}
       >
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
       </svg>
@@ -268,12 +271,10 @@ export default function HomePage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-                  {/* Badge HOT — góc trên trái */}
                   <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg z-10">
                     🔥 HOT
                   </div>
 
-                  {/* Nút tim — đồng bộ top-3 right-3 với HOT */}
                   <div className="absolute top-3 right-3 z-20">
                     <HeartButton
                       movieId={featured.id}
@@ -301,7 +302,7 @@ export default function HomePage() {
                 </div>
               </Link>
 
-              {/* 2 phim nhỏ — nút tim top-3 right-3 */}
+              {/* 2 phim nhỏ */}
               {sideMovies.map((m) => (
                 <Link
                   key={m.id}
@@ -316,7 +317,6 @@ export default function HomePage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
 
-                    {/* Nút tim */}
                     <div className="absolute top-3 right-3 z-20">
                       <HeartButton
                         movieId={m.id}
