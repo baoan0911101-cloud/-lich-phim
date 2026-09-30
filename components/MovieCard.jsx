@@ -63,7 +63,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </div>
         )}
 
-        {/* Nút tim — vòng tròn mờ, size nhỏ */}
+        {/* Nút tim — vòng tròn mờ */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
