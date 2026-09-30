@@ -4,9 +4,9 @@ import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
 
 // ═══════════════════════════════════════════
-// NÚT TIM — CÓ THỂ CHỈNH VỊ TRÍ QUA PROP
+// NÚT TIM — KHÔNG TỰ ĐỊNH VỊ, WRAPPER LÀM
 // ═══════════════════════════════════════════
-function HeartButton({ movieId, savedMovies, setSavedMovies, position = 'top-2 right-2' }) {
+function HeartButton({ movieId, savedMovies, setSavedMovies }) {
   const liked = savedMovies.includes(movieId);
 
   const toggleLike = (e) => {
@@ -29,7 +29,7 @@ function HeartButton({ movieId, savedMovies, setSavedMovies, position = 'top-2 r
     <button
       onClick={toggleLike}
       aria-label="Lưu phim"
-      className={`absolute ${position} z-20 flex items-center justify-center btn-tap transition-transform duration-300 hover:scale-110 active:scale-95`}
+      className="flex items-center justify-center btn-tap transition-transform duration-300 hover:scale-110 active:scale-95"
     >
       {liked ? (
         <svg
@@ -246,9 +246,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════
-            FEATURED (mobile)
-            ═══════════════════════════════════════ */}
+        {/* FEATURED (mobile) */}
         {!showSaved && !search && featured && (
           <section className="anim-fadeInUp d-2 md:hidden">
             <div className="flex items-center justify-between mb-3">
@@ -278,17 +276,18 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
                   {/* Badge HOT — góc trên trái */}
-                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg z-10">
+                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg z-20">
                     🔥 HOT
                   </div>
 
-                  {/* Nút tim — góc trên phải, CÙNG HÀNG với HOT */}
-                  <HeartButton
-                    movieId={featured.id}
-                    savedMovies={savedMovies}
-                    setSavedMovies={setSavedMovies}
-                    position="top-3 right-3"
-                  />
+                  {/* Wrapper tim — góc trên phải */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <HeartButton
+                      movieId={featured.id}
+                      savedMovies={savedMovies}
+                      setSavedMovies={setSavedMovies}
+                    />
+                  </div>
 
                   <div className="absolute inset-x-0 bottom-0 p-3.5">
                     <h3 className="text-base font-black text-white leading-tight line-clamp-2 mb-1">
@@ -309,7 +308,7 @@ export default function HomePage() {
                 </div>
               </Link>
 
-              {/* 2 phim nhỏ — nút tim mặc định top-2 right-2 */}
+              {/* 2 phim nhỏ */}
               {sideMovies.map((m) => (
                 <Link
                   key={m.id}
@@ -324,11 +323,14 @@ export default function HomePage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
 
-                    <HeartButton
-                      movieId={m.id}
-                      savedMovies={savedMovies}
-                      setSavedMovies={setSavedMovies}
-                    />
+                    {/* Wrapper tim — góc trên phải */}
+                    <div className="absolute top-2 right-2 z-20">
+                      <HeartButton
+                        movieId={m.id}
+                        savedMovies={savedMovies}
+                        setSavedMovies={setSavedMovies}
+                      />
+                    </div>
 
                     <div className="absolute inset-x-0 bottom-0 p-2">
                       <h3 className="text-[11px] font-bold text-white leading-tight line-clamp-2">
