@@ -69,7 +69,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
     >
-      {/* WRAPPER BAO POSTER + TIM */}
+      {/* ✅ WRAPPER RELATIVE — BAO POSTER + NÚT TIM, KHÔNG BAO TIÊU ĐỀ */}
       <div className="relative">
         <Link href={`/movie/${movie.id}`} className="block">
           <div
@@ -108,11 +108,11 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </div>
         </Link>
 
-        {/* ✅ NÚT TIM — HÌNH TRÒN NỀN TỐI MỜ + TIM ĐỎ, GIỐNG COIGIDAY.XYZ */}
+        {/* ✅ NÚT TIM — NẰM TRONG WRAPPER, GÓC TRÊN PHẢI POSTER */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
-          className="absolute top-2.5 right-2.5 z-30 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 btn-tap"
+          className="absolute top-3 right-3 z-30 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 btn-tap"
           style={{
             background: 'rgba(0, 0, 0, 0.45)',
             backdropFilter: 'blur(8px)',
@@ -137,8 +137,9 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </svg>
         </button>
       </div>
+      {/* ✅ ĐÓNG WRAPPER — TIÊU ĐỀ NẰM NGOÀI */}
 
-      {/* Tiêu đề — NGOÀI wrapper */}
+      {/* Tiêu đề — NGOÀI wrapper, KHÔNG ảnh hưởng vị trí tim */}
       <Link href={`/movie/${movie.id}`} className="block mt-2">
         <h3 className="text-[13px] font-semibold line-clamp-2 leading-snug text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
           {movie.title}
