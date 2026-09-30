@@ -1,6 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
+import {
+  formatRelativeDate,
+  formatFullDate,
+  getDateBadgeColor,
+} from '@/lib/formatDate';
 
 export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
   const delay = Math.min(index * 0.05, 0.4);
@@ -60,6 +65,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
   };
 
   const sizeClass = variant === 'row' ? 'w-[130px] shrink-0' : 'w-full';
+  const dateColor = getDateBadgeColor(movie.updated_at || movie.created_at);
 
   return (
     <div
@@ -157,14 +163,43 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
         </button>
       </div>
 
-      {/* Tiêu đề — NGOÀI wrapper */}
+      {/* Tiêu đề + Mùa + Ngày cập nhật */}
       <Link href={`/movie/${movie.id}`} className="block mt-2">
         <h3 className="text-[13px] font-semibold line-clamp-2 leading-snug text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
           {movie.title}
         </h3>
-        <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+        <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5 mb-1">
           {movie.title_goc}
         </p>
+
+        {/* Badge Mùa + Cập nhật */}
+        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+          {movie.season ? (
+            <span className="text-[10px] font-bold text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded">
+              {movie.season}
+            </span>
+          ) : (
+            <span />
+          )}
+
+          <span
+            className="text-[10px] font-medium flex items-center gap-1"
+            title={formatFullDate(movie.updated_at || movie.created_at)}
+          >
+            <span className="text-slate-500">Cập nhật:</span>
+            <span
+              className={`font-bold ${
+                dateColor === 'emerald'
+                  ? 'text-emerald-400'
+                  : dateColor === 'amber'
+                  ? 'text-amber-400'
+                  : 'text-slate-400'
+              }`}
+            >
+              {formatRelativeDate(movie.updated_at || movie.created_at)}
+            </span>
+          </span>
+        </div>
       </Link>
     </div>
   );
