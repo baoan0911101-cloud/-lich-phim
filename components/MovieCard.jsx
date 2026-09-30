@@ -22,7 +22,6 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
     return () => window.removeEventListener('savedMoviesChanged', handleChange);
   }, [movie.id]);
 
-  // Parallax 3D theo chuột
   const handleMouseMove = (e) => {
     const card = cardRef.current;
     if (!card) return;
@@ -107,27 +106,27 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
         </div>
       </Link>
 
-      {/* Nút tim — nằm NGOÀI Link, đồng bộ top-3 right-3 */}
+      {/* Nút tim — QUAY LẠI MÀU CŨ (nền đen mờ + tim hồng) */}
       <button
         onClick={toggleLike}
         aria-label="Lưu phim"
         className={`absolute top-3 right-3 z-30 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 btn-tap hover:scale-110 ${
           liked
-            ? 'bg-rose-500 shadow-[0_0_12px_rgba(251,113,133,0.8)] scale-110'
-            : 'bg-black/60 hover:bg-black/80 border border-white/20'
+            ? 'bg-black/40 border border-rose-400/40 shadow-[0_0_10px_rgba(251,113,133,0.4)]'
+            : 'bg-black/35 border border-white/15'
         }`}
       >
         <svg
           width="16"
           height="16"
           viewBox="0 0 24 24"
-          fill={liked ? '#ffffff' : 'none'}
-          stroke={liked ? '#ffffff' : '#fb7185'}
+          fill={liked ? '#fb7185' : 'none'}
+          stroke="#fb7185"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
           className={`transition-transform duration-300 ${
-            liked ? 'scale-110' : 'scale-100'
+            liked ? 'scale-110 drop-shadow-[0_0_5px_rgba(251,113,133,0.8)]' : 'scale-100'
           }`}
         >
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
