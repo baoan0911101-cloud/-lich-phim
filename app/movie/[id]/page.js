@@ -27,13 +27,11 @@ export default function MoviePage() {
       });
   }, [id, router]);
 
-  // Check trạng thái liked lần đầu
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
     setLiked(saved.includes(id));
   }, [id]);
 
-  // Lắng nghe thay đổi từ card ngoài
   useEffect(() => {
     const handleChange = () => {
       const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
@@ -143,7 +141,6 @@ export default function MoviePage() {
 
         {/* BUTTONS */}
         <div className="grid grid-cols-3 gap-2 mt-5 anim-fadeInUp d-4">
-          {/* NÚT LƯU PHIM */}
           <button
             onClick={toggleLike}
             className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 btn-tap transition-all duration-300 ${
@@ -186,54 +183,88 @@ export default function MoviePage() {
           </h2>
 
           <div className="space-y-3">
-            {movie.seasons?.map((s, i) => (
-              <div
-                key={i}
-                className="card-bg rounded-2xl p-3.5 anim-fadeInUp"
-                style={{ animationDelay: `${0.25 + i * 0.06}s` }}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-400/20 to-orange-500/20 border border-rose-400/30 flex items-center justify-center text-sm">
-                    🎞
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-bold text-white">
-                      {s.name}
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">
-                      ⏱ {s.duration || 'Đang cập nhật'}
-                    </div>
-                  </div>
-                </div>
+            {movie.seasons?.map((s, i) => {
+              const isAvailable = !!s.facebook;
 
-                <div className="flex gap-2">
-                  {s.facebook ? (
+              return (
+                <div
+                  key={i}
+                  className={`card-bg rounded-2xl p-3.5 anim-fadeInUp transition-all duration-300 ${
+                    isAvailable ? 'hover:border-rose-400/50' : ''
+                  }`}
+                  style={{ animationDelay: `${0.25 + i * 0.06}s` }}
+                >
+                  {/* HEADER TẬP — BẤM ĐƯỢC NẾU CÓ LINK */}
+                  {isAvailable ? (
                     <a
                       href={s.facebook}
                       target="_blank"
-                      rel="noopener"
-                      className="flex-1 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 font-bold text-xs flex items-center justify-center gap-1.5 btn-tap"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 mb-3 group cursor-pointer"
                     >
-                      <span className="font-black">f</span> Facebook
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-400/30 to-orange-500/30 border border-rose-400/50 flex items-center justify-center text-sm shrink-0 group-hover:from-rose-400/50 group-hover:to-orange-500/50 transition-colors">
+                        ▶
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-white group-hover:text-rose-300 transition-colors truncate">
+                          {s.name}
+                        </div>
+                        <div className="text-[10px] mt-0.5">
+                          <span className="text-emerald-400 font-bold">
+                            ● Có thể xem
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-rose-400 text-lg group-hover:translate-x-1 transition-transform">
+                        →
+                      </div>
                     </a>
                   ) : (
-                    <div className="flex-1 py-2.5 rounded-xl bg-[#151d2e] border border-[#1e293b] text-slate-500 text-xs font-bold flex items-center justify-center">
-                      Chưa có link
+                    <div className="flex items-center gap-3 mb-3 opacity-60">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-400/10 to-slate-500/10 border border-slate-500/20 flex items-center justify-center text-sm shrink-0">
+                        🎞
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-slate-400 truncate">
+                          {s.name}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          ⏱ {s.duration || 'Đang cập nhật'}
+                        </div>
+                      </div>
                     </div>
                   )}
-                  {s.youtube && (
-                    <a
-                      href={s.youtube}
-                      target="_blank"
-                      rel="noopener"
-                      className="flex-1 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 font-bold text-xs flex items-center justify-center gap-1.5 btn-tap"
-                    >
-                      ▶ YouTube
-                    </a>
-                  )}
+
+                  {/* NÚT PHỤ — Facebook + YouTube */}
+                  <div className="flex gap-2">
+                    {s.facebook ? (
+                      <a
+                        href={s.facebook}
+                        target="_blank"
+                        rel="noopener"
+                        className="flex-1 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 font-bold text-xs flex items-center justify-center gap-1.5 btn-tap hover:bg-blue-500/20 transition-colors"
+                      >
+                        <span className="font-black">f</span> Facebook
+                      </a>
+                    ) : (
+                      <div className="flex-1 py-2.5 rounded-xl bg-[#151d2e] border border-[#1e293b] text-slate-500 text-xs font-bold flex items-center justify-center">
+                        Chưa có link
+                      </div>
+                    )}
+                    {s.youtube && (
+                      <a
+                        href={s.youtube}
+                        target="_blank"
+                        rel="noopener"
+                        className="flex-1 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 font-bold text-xs flex items-center justify-center gap-1.5 btn-tap hover:bg-red-500/20 transition-colors"
+                      >
+                        ▶ YouTube
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
