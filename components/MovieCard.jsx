@@ -122,8 +122,8 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
             top: '10px',
             right: '10px',
             zIndex: 30,
-            width: '32px',
-            height: '32px',
+            width: '28px',
+            height: '29px',
             borderRadius: '9999px',
             display: 'flex',
             alignItems: 'center',
@@ -140,8 +140,8 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
           <svg
-            width="16"
-            height="16"
+            width="14"
+            height="14"
             viewBox="0 0 24 24"
             fill={liked ? '#fb7185' : 'none'}
             stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.85)'}
