@@ -108,22 +108,28 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </div>
         </Link>
 
-        {/* ✅ NÚT TIM — style giống coigiday.xyz */}
+        {/* ✅ NÚT TIM — HÌNH TRÒN NỀN TỐI MỜ + TIM ĐỎ, GIỐNG COIGIDAY.XYZ */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
-          className="absolute top-2.5 right-2.5 z-30 w-7 h-7 flex items-center justify-center transition-all duration-300 hover:scale-125 btn-tap"
+          className="absolute top-2.5 right-2.5 z-30 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 btn-tap"
+          style={{
+            background: 'rgba(0, 0, 0, 0.45)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+          }}
         >
           <svg
-            width="22"
-            height="22"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
-            fill={liked ? '#fb7185' : 'rgba(255,255,255,0.9)'}
-            stroke={liked ? '#fb7185' : 'rgba(255,255,255,0.9)'}
-            strokeWidth="1.5"
+            fill={liked ? '#fb7185' : 'none'}
+            stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.85)'}
+            strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`transition-all duration-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${
+            className={`transition-all duration-300 ${
               liked ? 'scale-110 drop-shadow-[0_0_6px_rgba(251,113,133,0.9)]' : 'scale-100'
             }`}
           >
