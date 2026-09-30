@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
+import MovieModal from '@/components/MovieModal';
 
 export default function HomePage() {
   const [movies, setMovies] = useState([]);
@@ -10,6 +11,7 @@ export default function HomePage() {
   const [showSaved, setShowSaved] = useState(false);
   const [savedMovies, setSavedMovies] = useState([]);
   const [search, setSearch] = useState('');
+  const [selectedMovie, setSelectedMovie] = useState(null);
 
   useEffect(() => {
     fetch('/api/movies')
@@ -225,9 +227,9 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-3 gap-2.5">
-              <Link
-                href={`/movie/${featured.id}`}
-                className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden card-hover group card-bg"
+              <div
+                onClick={() => setSelectedMovie(featured)}
+                className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden card-hover group card-bg cursor-pointer"
               >
                 <div className="aspect-[4/5] relative">
                   <img
@@ -256,13 +258,13 @@ export default function HomePage() {
                     </button>
                   </div>
                 </div>
-              </Link>
+              </div>
 
               {sideMovies.map((m) => (
-                <Link
+                <div
                   key={m.id}
-                  href={`/movie/${m.id}`}
-                  className="relative rounded-2xl overflow-hidden card-hover group card-bg"
+                  onClick={() => setSelectedMovie(m)}
+                  className="relative rounded-2xl overflow-hidden card-hover group card-bg cursor-pointer"
                 >
                   <div className="aspect-[2/3] relative">
                     <img
@@ -277,7 +279,7 @@ export default function HomePage() {
                       </h3>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </section>
@@ -293,7 +295,12 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-3 gap-2.5">
               {newest.slice(0, 6).map((m, i) => (
-                <MovieCard key={m.id} movie={m} index={i} />
+                <MovieCard
+                  key={m.id}
+                  movie={m}
+                  index={i}
+                  onClick={setSelectedMovie}
+                />
               ))}
             </div>
           </section>
@@ -343,7 +350,12 @@ export default function HomePage() {
 
             <div className="grid grid-cols-3 gap-2.5">
               {filtered.map((m, i) => (
-                <MovieCard key={m.id} movie={m} index={i} />
+                <MovieCard
+                  key={m.id}
+                  movie={m}
+                  index={i}
+                  onClick={setSelectedMovie}
+                />
               ))}
             </div>
           </section>
@@ -365,6 +377,14 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* MODAL CHI TIẾT PHIM */}
+      {selectedMovie && (
+        <MovieModal
+          movie={selectedMovie}
+          onClose={() => setSelectedMovie(null)}
+        />
+      )}
     </div>
   );
 }
