@@ -69,13 +69,17 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
     >
-      {/* ✅ WRAPPER RELATIVE — BAO POSTER + NÚT TIM, KHÔNG BAO TIÊU ĐỀ */}
-      <div className="relative">
+      {/* ============================================ */}
+      {/* WRAPPER RELATIVE — BAO POSTER + TIM          */}
+      {/* Dùng inline style để KHÔNG THỂ bị sai        */}
+      {/* ============================================ */}
+      <div style={{ position: 'relative', display: 'block' }}>
         <Link href={`/movie/${movie.id}`} className="block">
           <div
             ref={cardRef}
-            className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-[#151d2e] transition-all duration-500"
+            className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#151d2e] transition-all duration-500"
             style={{
+              position: 'relative',
               transform: isHover
                 ? 'perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px) scale(1.02)'
                 : 'perspective(800px) rotateX(0) rotateY(0) translateY(0) scale(1)',
@@ -108,17 +112,33 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           </div>
         </Link>
 
-        {/* ✅ NÚT TIM — NẰM TRONG WRAPPER, GÓC TRÊN PHẢI POSTER */}
+        {/* ============================================ */}
+        {/* NÚT TIM — INLINE STYLE, CHẮC CHẮN GÓC TRÊN PHẢI */}
+        {/* ============================================ */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
-          className="absolute top-3 right-3 z-30 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 btn-tap"
           style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            zIndex: 30,
+            width: '40px',
+            height: '40px',
+            borderRadius: '9999px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             background: 'rgba(0, 0, 0, 0.45)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             border: '1px solid rgba(255, 255, 255, 0.15)',
+            cursor: 'pointer',
+            transition: 'transform 0.3s ease',
+            padding: 0,
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
           <svg
             width="20"
@@ -129,17 +149,22 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`transition-all duration-300 ${
-              liked ? 'scale-110 drop-shadow-[0_0_6px_rgba(251,113,133,0.9)]' : 'scale-100'
-            }`}
+            style={{
+              transition: 'all 0.3s',
+              transform: liked ? 'scale(1.1)' : 'scale(1)',
+              filter: liked
+                ? 'drop-shadow(0 0 6px rgba(251,113,133,0.9))'
+                : 'none',
+            }}
           >
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
           </svg>
         </button>
       </div>
-      {/* ✅ ĐÓNG WRAPPER — TIÊU ĐỀ NẰM NGOÀI */}
+      {/* ============================================ */}
+      {/* ĐÓNG WRAPPER — TIÊU ĐỀ NẰM NGOÀI              */}
+      {/* ============================================ */}
 
-      {/* Tiêu đề — NGOÀI wrapper, KHÔNG ảnh hưởng vị trí tim */}
       <Link href={`/movie/${movie.id}`} className="block mt-2">
         <h3 className="text-[13px] font-semibold line-clamp-2 leading-snug text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
           {movie.title}
