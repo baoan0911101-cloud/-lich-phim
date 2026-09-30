@@ -4,7 +4,7 @@ import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
 
 // ═══════════════════════════════════════════
-// NÚT TIM — có hiệu ứng scale khi bấm
+// NÚT TIM — có vòng tròn, đồng bộ với HOT
 // ═══════════════════════════════════════════
 function HeartButton({ movieId, savedMovies, setSavedMovies }) {
   const liked = savedMovies.includes(movieId);
@@ -271,10 +271,12 @@ export default function HomePage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
+                  {/* Badge HOT — góc trên trái */}
                   <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg z-10">
                     🔥 HOT
                   </div>
 
+                  {/* Nút tim — đồng bộ top-3 right-3 với HOT */}
                   <div className="absolute top-3 right-3 z-20">
                     <HeartButton
                       movieId={featured.id}
@@ -302,7 +304,7 @@ export default function HomePage() {
                 </div>
               </Link>
 
-              {/* 2 phim nhỏ */}
+              {/* 2 phim nhỏ — nút tim top-3 right-3 */}
               {sideMovies.map((m) => (
                 <Link
                   key={m.id}
@@ -317,6 +319,7 @@ export default function HomePage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
 
+                    {/* Nút tim — nằm TRONG div.aspect relative */}
                     <div className="absolute top-3 right-3 z-20">
                       <HeartButton
                         movieId={m.id}
