@@ -74,11 +74,11 @@ export default function MovieCard({ movie, index = 0 }) {
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
     >
-      {/* ẢNH NGANG + BADGE BÊN TRONG */}
+      {/* ẢNH: DỌC MOBILE + NGANG PC */}
       <Link href={`/movie/${movie.id}`} className="block">
         <div
           ref={cardRef}
-          className="relative aspect-[16/9] rounded-xl overflow-hidden bg-[#151d2e] transition-all duration-500"
+          className="relative aspect-[2/3] md:aspect-[16/9] rounded-xl overflow-hidden bg-[#151d2e] transition-all duration-500"
           style={{
             transform: isHover
               ? 'perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-3px) scale(1.02)'
@@ -102,14 +102,14 @@ export default function MovieCard({ movie, index = 0 }) {
 
           {/* BADGE MÙA — góc trên trái */}
           {movie.season && (
-            <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/60 backdrop-blur text-[8px] font-bold text-amber-300 z-10">
+            <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 z-10 whitespace-nowrap">
               {movie.season}
             </div>
           )}
 
           {/* THỜI LƯỢNG — góc dưới trái */}
           {movie.total_duration && (
-            <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded-full bg-black/70 backdrop-blur text-[8px] font-bold text-amber-300 flex items-center gap-0.5 z-10">
+            <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 flex items-center gap-0.5 z-10 whitespace-nowrap">
               ⏱ {movie.total_duration}
             </div>
           )}
@@ -118,12 +118,12 @@ export default function MovieCard({ movie, index = 0 }) {
           <button
             onClick={toggleLike}
             aria-label="Lưu phim"
-            className="absolute top-1 right-1 z-20 w-5 h-5 rounded-full flex items-center justify-center bg-black/50 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
+            className="absolute top-1 right-1 z-20 w-6 h-6 rounded-full flex items-center justify-center bg-black/50 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
             style={{ padding: 0 }}
           >
             <svg
-              width="9"
-              height="9"
+              width="11"
+              height="11"
               viewBox="0 0 24 24"
               fill={liked ? '#fb7185' : 'none'}
               stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.9)'}
@@ -151,24 +151,25 @@ export default function MovieCard({ movie, index = 0 }) {
         </h3>
 
         {/* Tên gốc */}
-        <p className="text-[8px] text-slate-500 line-clamp-1 mt-0.5 mb-0.5">
+        <p className="text-[9px] text-slate-500 line-clamp-1 mt-0.5 mb-1">
           {movie.title_goc}
         </p>
 
         {/* Mùa + Cập nhật — cùng hàng */}
-        <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center justify-between gap-1 flex-wrap">
           {movie.season ? (
-            <span className="text-[8px] font-bold text-rose-300 bg-rose-500/10 px-1 py-0.5 rounded shrink-0 truncate max-w-[40px]">
+            <span className="text-[9px] font-bold text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded whitespace-nowrap">
               {movie.season}
             </span>
           ) : (
-            <span className="shrink-0" />
+            <span />
           )}
 
           <span
-            className="text-[8px] font-medium shrink-0"
+            className="text-[9px] font-medium flex items-center gap-1 whitespace-nowrap"
             title={formatFullDate(movie.updated_at || movie.created_at)}
           >
+            <span className="text-slate-500">Cập nhật:</span>
             <span
               className={`font-bold px-1 py-0.5 rounded ${
                 dateColor === 'emerald' || dateColor === 'amber'
