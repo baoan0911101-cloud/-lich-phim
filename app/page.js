@@ -4,9 +4,9 @@ import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
 
 // ═══════════════════════════════════════════
-// NÚT TIM — KHÔNG VÒNG TRÒN
+// NÚT TIM — CÓ THỂ CHỈNH VỊ TRÍ QUA PROP
 // ═══════════════════════════════════════════
-function HeartButton({ movieId, savedMovies, setSavedMovies }) {
+function HeartButton({ movieId, savedMovies, setSavedMovies, position = 'top-2 right-2' }) {
   const liked = savedMovies.includes(movieId);
 
   const toggleLike = (e) => {
@@ -29,7 +29,7 @@ function HeartButton({ movieId, savedMovies, setSavedMovies }) {
     <button
       onClick={toggleLike}
       aria-label="Lưu phim"
-      className="absolute top-2 right-2 z-20 flex items-center justify-center btn-tap transition-transform duration-300 hover:scale-110 active:scale-95"
+      className={`absolute ${position} z-20 flex items-center justify-center btn-tap transition-transform duration-300 hover:scale-110 active:scale-95`}
     >
       {liked ? (
         <svg
@@ -149,7 +149,6 @@ export default function HomePage() {
 
   return (
     <div className="md:flex md:gap-6 md:px-6 md:py-6">
-      {/* SIDEBAR (PC) */}
       <aside className="hidden md:block w-56 shrink-0">
         <div className="sticky top-20 card-bg rounded-2xl p-3 max-h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar">
           <div className="flex items-center gap-2 px-3 py-2 mb-2 border-b border-[#1e293b]">
@@ -199,9 +198,7 @@ export default function HomePage() {
         </div>
       </aside>
 
-      {/* MAIN */}
       <div className="flex-1 px-4 pt-4 pb-6 md:p-0 md:min-w-0">
-        {/* SEARCH + ĐÃ LƯU */}
         <section className="anim-fadeInUp d-1 mb-5">
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -249,7 +246,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* FEATURED (mobile) */}
+        {/* ═══════════════════════════════════════
+            FEATURED (mobile)
+            ═══════════════════════════════════════ */}
         {!showSaved && !search && featured && (
           <section className="anim-fadeInUp d-2 md:hidden">
             <div className="flex items-center justify-between mb-3">
@@ -265,6 +264,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-3 gap-2.5">
+              {/* FEATURED — phim lớn */}
               <Link
                 href={`/movie/${featured.id}`}
                 className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden card-hover group card-bg"
@@ -277,14 +277,17 @@ export default function HomePage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg">
+                  {/* Badge HOT — góc trên trái */}
+                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg z-10">
                     🔥 HOT
                   </div>
 
+                  {/* Nút tim — góc trên phải, CÙNG HÀNG với HOT */}
                   <HeartButton
                     movieId={featured.id}
                     savedMovies={savedMovies}
                     setSavedMovies={setSavedMovies}
+                    position="top-3 right-3"
                   />
 
                   <div className="absolute inset-x-0 bottom-0 p-3.5">
@@ -306,6 +309,7 @@ export default function HomePage() {
                 </div>
               </Link>
 
+              {/* 2 phim nhỏ — nút tim mặc định top-2 right-2 */}
               {sideMovies.map((m) => (
                 <Link
                   key={m.id}
