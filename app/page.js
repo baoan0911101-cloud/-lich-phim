@@ -86,7 +86,6 @@ export default function HomePage() {
   const featured = filtered[0];
   const sideMovies = filtered.slice(1, 3);
   const newest = filtered;
-  const rest = filtered.slice(2);
 
   const handleFilterClick = (f) => {
     setFilter(f);
@@ -96,11 +95,11 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="px-4 py-8 max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid grid-cols-3 gap-2.5">
+          {Array.from({ length: 9 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-[2/3] rounded-2xl bg-[#151d2e] animate-pulse"
+              className="aspect-[16/9] rounded-xl bg-[#151d2e] animate-pulse"
             />
           ))}
         </div>
@@ -292,8 +291,8 @@ export default function HomePage() {
                 Mới cập nhật
               </h2>
             </div>
-            <div className="flex flex-col gap-4">
-              {newest.slice(0, 5).map((m, i) => (
+            <div className="grid grid-cols-3 gap-2.5">
+              {newest.slice(0, 6).map((m, i) => (
                 <MovieCard key={m.id} movie={m} index={i} />
               ))}
             </div>
@@ -342,7 +341,7 @@ export default function HomePage() {
                 : `Thể loại: ${filter}`}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-2.5">
               {filtered.map((m, i) => (
                 <MovieCard key={m.id} movie={m} index={i} />
               ))}
