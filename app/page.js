@@ -3,57 +3,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
 
-// ═══════════════════════════════════════════
-// NÚT TIM — có vòng tròn, đồng bộ với HOT
-// ═══════════════════════════════════════════
-function HeartButton({ movieId, savedMovies, setSavedMovies }) {
-  const liked = savedMovies.includes(movieId);
-
-  const toggleLike = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-    let newSaved;
-    if (saved.includes(movieId)) {
-      newSaved = saved.filter((x) => x !== movieId);
-    } else {
-      newSaved = [...saved, movieId];
-    }
-    localStorage.setItem('savedMovies', JSON.stringify(newSaved));
-    window.dispatchEvent(new Event('savedMoviesChanged'));
-    setSavedMovies(newSaved);
-  };
-
-  return (
-    <button
-      onClick={toggleLike}
-      aria-label="Lưu phim"
-      className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 btn-tap hover:scale-110 active:scale-95 ${
-        liked
-          ? 'bg-black/40 border border-rose-400/40 shadow-[0_0_10px_rgba(251,113,133,0.4)]'
-          : 'bg-black/35 border border-white/15'
-      }`}
-    >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill={liked ? '#fb7185' : 'none'}
-        stroke="#fb7185"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={`transition-transform duration-300 ${
-          liked ? 'scale-110 drop-shadow-[0_0_5px_rgba(251,113,133,0.8)]' : 'scale-100'
-        }`}
-      >
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-      </svg>
-    </button>
-  );
-}
-
 export default function HomePage() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,11 +36,30 @@ export default function HomePage() {
   }, []);
 
   const filters = [
-    'Tất cả', 'Hoàn Thành', 'Nữ Chính', 'Nam Chính', 'Tu Tiên', 'Vả mặt',
-    'Xuyên Không', 'Hài Hước', 'Tình Cảm', 'Main Có Não', 'Nghịch tập',
-    'Hệ Thống', 'Hiện Đại', 'Vô địch lưu', 'Xuyên Thư', 'Đô thị dị năng',
-    'Trọng sinh', 'Fantasy', 'Kinh Dị', 'Mạt thế', 'Võng du', 'Học đường',
-    'Võ hiệp', 'Vô hạn lưu',
+    'Tất cả',
+    'Hoàn Thành',
+    'Nữ Chính',
+    'Nam Chính',
+    'Tu Tiên',
+    'Vả mặt',
+    'Xuyên Không',
+    'Hài Hước',
+    'Tình Cảm',
+    'Main Có Não',
+    'Nghịch tập',
+    'Hệ Thống',
+    'Hiện Đại',
+    'Vô địch lưu',
+    'Xuyên Thư',
+    'Đô thị dị năng',
+    'Trọng sinh',
+    'Fantasy',
+    'Kinh Dị',
+    'Mạt thế',
+    'Võng du',
+    'Học đường',
+    'Võ hiệp',
+    'Vô hạn lưu',
   ];
 
   const base = showSaved
@@ -192,7 +160,7 @@ export default function HomePage() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <div className="flex-1 px-4 pt-4 pb-6 md:p-0 md:min-w-0">
         {/* SEARCH + ĐÃ LƯU */}
         <section className="anim-fadeInUp d-1 mb-5">
@@ -258,7 +226,6 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-3 gap-2.5">
-              {/* FEATURED — phim lớn */}
               <Link
                 href={`/movie/${featured.id}`}
                 className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden card-hover group card-bg"
@@ -270,21 +237,9 @@ export default function HomePage() {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
-                  {/* Badge HOT — góc trên trái */}
-                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg z-10">
+                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg">
                     🔥 HOT
                   </div>
-
-                  {/* Nút tim — đồng bộ top-3 right-3 với HOT */}
-                  <div className="absolute top-3 right-3 z-20">
-                    <HeartButton
-                      movieId={featured.id}
-                      savedMovies={savedMovies}
-                      setSavedMovies={setSavedMovies}
-                    />
-                  </div>
-
                   <div className="absolute inset-x-0 bottom-0 p-3.5">
                     <h3 className="text-base font-black text-white leading-tight line-clamp-2 mb-1">
                       {featured.title}
@@ -304,7 +259,6 @@ export default function HomePage() {
                 </div>
               </Link>
 
-              {/* 2 phim nhỏ — nút tim top-3 right-3 */}
               {sideMovies.map((m) => (
                 <Link
                   key={m.id}
@@ -318,16 +272,6 @@ export default function HomePage() {
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
-
-                    {/* Nút tim — nằm TRONG div.aspect relative */}
-                    <div className="absolute top-3 right-3 z-20">
-                      <HeartButton
-                        movieId={m.id}
-                        savedMovies={savedMovies}
-                        setSavedMovies={setSavedMovies}
-                      />
-                    </div>
-
                     <div className="absolute inset-x-0 bottom-0 p-2">
                       <h3 className="text-[11px] font-bold text-white leading-tight line-clamp-2">
                         {m.title}
