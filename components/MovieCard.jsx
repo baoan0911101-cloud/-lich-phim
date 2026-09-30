@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   formatRelativeDate,
   formatFullDate,
@@ -10,6 +10,8 @@ import {
 export default function MovieCard({ movie, index = 0 }) {
   const delay = Math.min(index * 0.05, 0.4);
   const [liked, setLiked] = useState(false);
+  const [isHover, setIsHover] = useState(false);
+  const cardRef = useRef(null);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
@@ -24,6 +26,24 @@ export default function MovieCard({ movie, index = 0 }) {
     window.addEventListener('savedMoviesChanged', handleChange);
     return () => window.removeEventListener('savedMoviesChanged', handleChange);
   }, [movie.id]);
+
+  const handleMouseMove = (e) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    card.style.setProperty('--rx', `${y * 6}deg`);
+    card.style.setProperty('--ry', `${-x * 6}deg`);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHover(false);
+    const card = cardRef.current;
+    if (!card) return;
+    card.style.setProperty('--rx', '0deg');
+    card.style.setProperty('--ry', '0deg');
+  };
 
   const toggleLike = (e) => {
     e.preventDefault();
@@ -50,31 +70,46 @@ export default function MovieCard({ movie, index = 0 }) {
     <div
       className="block anim-fadeInUp group"
       style={{ animationDelay: `${delay}s` }}
+      onMouseEnter={() => setIsHover(true)}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
     >
       {/* ẢNH NGANG + BADGE BÊN TRONG */}
       <Link href={`/movie/${movie.id}`} className="block">
-        <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-[#151d2e]">
+        <div
+          ref={cardRef}
+          className="relative aspect-[16/9] rounded-xl overflow-hidden bg-[#151d2e] transition-all duration-500"
+          style={{
+            transform: isHover
+              ? 'perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-3px) scale(1.02)'
+              : 'perspective(800px) rotateX(0) rotateY(0) translateY(0) scale(1)',
+            transformStyle: 'preserve-3d',
+            boxShadow: isHover
+              ? '0 15px 30px rgba(0,0,0,0.6), 0 0 15px rgba(251,113,133,0.3)'
+              : '0 4px 12px rgba(0,0,0,0.3)',
+          }}
+        >
           {/* ẢNH */}
           <img
             src={movie.poster}
             alt={movie.title}
             loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
 
-          {/* Gradient nhẹ phía dưới để badge nổi */}
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+          {/* Gradient nhẹ phía dưới */}
+          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
 
           {/* BADGE MÙA — góc trên trái */}
           {movie.season && (
-            <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur text-[10px] font-bold text-amber-300 border border-amber-400/20 z-10">
+            <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur text-[9px] font-bold text-amber-300 z-10">
               {movie.season}
             </div>
           )}
 
           {/* THỜI LƯỢNG — góc dưới trái */}
           {movie.total_duration && (
-            <div className="absolute bottom-2.5 left-2.5 px-2 py-1 rounded-full bg-black/70 backdrop-blur text-[10px] font-bold text-amber-300 flex items-center gap-1 z-10">
+            <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 flex items-center gap-0.5 z-10">
               ⏱ {movie.total_duration}
             </div>
           )}
@@ -83,12 +118,12 @@ export default function MovieCard({ movie, index = 0 }) {
           <button
             onClick={toggleLike}
             aria-label="Lưu phim"
-            className="absolute top-2.5 right-2.5 z-20 w-7 h-7 rounded-full flex items-center justify-center bg-black/50 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
+            className="absolute top-1.5 right-1.5 z-20 w-6 h-6 rounded-full flex items-center justify-center bg-black/50 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
             style={{ padding: 0 }}
           >
             <svg
-              width="13"
-              height="13"
+              width="11"
+              height="11"
               viewBox="0 0 24 24"
               fill={liked ? '#fb7185' : 'none'}
               stroke={liked ? '#fb7185' : 'rgba(255, 255, 255, 0.9)'}
@@ -98,7 +133,7 @@ export default function MovieCard({ movie, index = 0 }) {
               style={{
                 transition: 'all 0.3s',
                 filter: liked
-                  ? 'drop-shadow(0 0 5px rgba(251,113,133,0.9))'
+                  ? 'drop-shadow(0 0 4px rgba(251,113,133,0.9))'
                   : 'none',
               }}
             >
@@ -109,16 +144,21 @@ export default function MovieCard({ movie, index = 0 }) {
       </Link>
 
       {/* TEXT BÊN DƯỚI ẢNH */}
-      <Link href={`/movie/${movie.id}`} className="block mt-2">
+      <Link href={`/movie/${movie.id}`} className="block mt-1.5">
         {/* Tên phim */}
-        <h3 className="text-[14px] font-black line-clamp-2 leading-snug text-white group-hover:text-rose-300 transition-colors duration-300">
+        <h3 className="text-[12px] font-semibold line-clamp-2 leading-snug text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
           {movie.title}
         </h3>
 
+        {/* Tên gốc — GIỮ LẠI */}
+        <p className="text-[9px] text-slate-500 line-clamp-1 mt-0.5 mb-1">
+          {movie.title_goc}
+        </p>
+
         {/* Mùa + Cập nhật — cùng hàng */}
-        <div className="flex items-center justify-between gap-2 mt-1.5">
+        <div className="flex items-center justify-between gap-1">
           {movie.season ? (
-            <span className="text-[11px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0">
+            <span className="text-[9px] font-bold text-rose-300 bg-rose-500/10 px-1 py-0.5 rounded shrink-0">
               {movie.season}
             </span>
           ) : (
@@ -126,15 +166,17 @@ export default function MovieCard({ movie, index = 0 }) {
           )}
 
           <span
-            className="text-[11px] font-medium flex items-center gap-1 shrink-0"
+            className="text-[9px] font-medium flex items-center gap-0.5 shrink-0"
             title={formatFullDate(movie.updated_at || movie.created_at)}
           >
             <span className="text-slate-500">Cập nhật:</span>
             <span
-              className={`font-bold px-1.5 py-0.5 rounded border ${
-                dateColor === 'emerald' || dateColor === 'amber'
-                  ? 'text-amber-300 bg-amber-500/15 border-amber-500/40'
-                  : 'text-slate-300 bg-slate-500/10 border-slate-500/30'
+              className={`font-bold px-1 py-0.5 rounded ${
+                dateColor === 'emerald'
+                  ? 'text-amber-300 bg-amber-500/15 border border-amber-500/40'
+                  : dateColor === 'amber'
+                  ? 'text-amber-300 bg-amber-500/15 border border-amber-500/40'
+                  : 'text-slate-300 bg-slate-500/10 border border-slate-500/30'
               }`}
             >
               {formatRelativeDate(movie.updated_at || movie.created_at).toUpperCase()}
