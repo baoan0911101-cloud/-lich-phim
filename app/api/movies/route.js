@@ -1,51 +1,36 @@
 import { query } from '@/lib/db';
 
-// GET: lấy danh sách phim
-export async function GET() {
-  try {
-    const moviesResult = await query(
-      'SELECT * FROM movies ORDER BY created_at DESC'
-    );
-    const seasonsResult = await query(
-      'SELECT * FROM seasons ORDER BY movie_id, sort_order'
-    );
-
-    const seasonsByMovie = {};
-    seasonsResult.rows.forEach((s) => {
-      if (!seasonsByMovie[s.movie_id]) seasonsByMovie[s.movie_id] = [];
-      seasonsByMovie[s.movie_id].push(s);
-    });
-
-    const movies = moviesResult.rows.map((m) => ({
-      ...m,
-      seasons: seasonsByMovie[m.id] || [],
-    }));
-
-    return Response.json({ movies });
-  } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
-  }
-}
-
-// POST: thêm phim mới
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { password, movie } = body;
+    const { password, id, movie } = await request.json();
 
     if (password !== process.env.ADMIN_PASSWORD) {
       return Response.json({ error: 'Sai mật khẩu' }, { status: 401 });
     }
 
-    if (!movie?.id || !movie?.title) {
+    if (!id || !movie) {
       return Response.json({ error: 'Thiếu thông tin' }, { status: 400 });
     }
 
+    const exist = await query('SELECT id FROM movies WHERE id = $1', [id]);
+    if (exist.rows.length === 0) {
+      return Response.json({ error: 'Phim không tồn tại' }, { status: 404 });
+    }
+
     await query(
-      `INSERT INTO movies (id, title, title_goc, poster, season, tags, total_duration, overview, telegram_url, messenger_url, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      `UPDATE movies SET
+        title = $1,
+        title_goc = $2,
+        poster = $3,
+        season = $4,
+        tags = $5,
+        total_duration = $6,
+        overview = $7,
+        telegram_url = $8,
+        messenger_url = $9,
+        updated_at = NOW()
+       WHERE id = $10`,
       [
-        movie.id,
         movie.title,
         movie.title_goc || null,
         movie.poster || null,
@@ -55,9 +40,11 @@ export async function POST(request) {
         movie.overview || null,
         movie.telegram_url || null,
         movie.messenger_url || null,
-        'HÔM NAY',
+        id,
       ]
     );
+
+    await query('DELETE FROM seasons WHERE movie_id = $1', [id]);
 
     if (movie.seasons?.length) {
       for (let i = 0; i < movie.seasons.length; i++) {
@@ -66,7 +53,7 @@ export async function POST(request) {
           `INSERT INTO seasons (movie_id, name, duration, facebook, youtube, sort_order)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [
-            movie.id,
+            id,
             s.name,
             s.duration || null,
             s.facebook || null,
@@ -77,14 +64,8 @@ export async function POST(request) {
       }
     }
 
-    return Response.json({ success: true, id: movie.id });
+    return Response.json({ success: true, id });
   } catch (err) {
-    if (err.code === '23505') {
-      return Response.json(
-        { error: 'Phim đã tồn tại (trùng id)' },
-        { status: 400 }
-      );
-    }
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
