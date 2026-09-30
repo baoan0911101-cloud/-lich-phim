@@ -3,6 +3,51 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MovieCard from '@/components/MovieCard';
 
+// ═══════════════════════════════════════════
+// NÚT TIM SVG ĐỎ HỒNG — dùng lại nhiều chỗ
+// ═══════════════════════════════════════════
+function HeartButton({ movieId, savedMovies, setSavedMovies }) {
+  const liked = savedMovies.includes(movieId);
+
+  const toggleLike = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    let newSaved;
+    if (saved.includes(movieId)) {
+      newSaved = saved.filter((x) => x !== movieId);
+    } else {
+      newSaved = [...saved, movieId];
+    }
+    localStorage.setItem('savedMovies', JSON.stringify(newSaved));
+    window.dispatchEvent(new Event('savedMoviesChanged'));
+    setSavedMovies(newSaved);
+  };
+
+  return (
+    <button
+      onClick={toggleLike}
+      aria-label="Lưu phim"
+      className={`absolute top-2 right-2 w-9 h-9 rounded-full backdrop-blur flex items-center justify-center z-20 transition-all duration-300 ${
+        liked
+          ? 'bg-rose-500/20 border border-rose-400/60 shadow-[0_0_12px_rgba(251,113,133,0.6)]'
+          : 'bg-black/50 border border-white/15 shadow-[0_2px_8px_rgba(0,0,0,0.5)]'
+      }`}
+    >
+      {liked ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fb7185" className="drop-shadow-[0_0_6px_rgba(251,113,133,0.8)]">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb7185" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_0_4px_rgba(251,113,133,0.5)]">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export default function HomePage() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,30 +81,11 @@ export default function HomePage() {
   }, []);
 
   const filters = [
-    'Tất cả',
-    'Hoàn Thành',
-    'Nữ Chính',
-    'Nam Chính',
-    'Tu Tiên',
-    'Vả mặt',
-    'Xuyên Không',
-    'Hài Hước',
-    'Tình Cảm',
-    'Main Có Não',
-    'Nghịch tập',
-    'Hệ Thống',
-    'Hiện Đại',
-    'Vô địch lưu',
-    'Xuyên Thư',
-    'Đô thị dị năng',
-    'Trọng sinh',
-    'Fantasy',
-    'Kinh Dị',
-    'Mạt thế',
-    'Võng du',
-    'Học đường',
-    'Võ hiệp',
-    'Vô hạn lưu',
+    'Tất cả', 'Hoàn Thành', 'Nữ Chính', 'Nam Chính', 'Tu Tiên', 'Vả mặt',
+    'Xuyên Không', 'Hài Hước', 'Tình Cảm', 'Main Có Não', 'Nghịch tập',
+    'Hệ Thống', 'Hiện Đại', 'Vô địch lưu', 'Xuyên Thư', 'Đô thị dị năng',
+    'Trọng sinh', 'Fantasy', 'Kinh Dị', 'Mạt thế', 'Võng du', 'Học đường',
+    'Võ hiệp', 'Vô hạn lưu',
   ];
 
   const base = showSaved
@@ -98,10 +124,7 @@ export default function HomePage() {
       <div className="px-4 py-8 max-w-6xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-[2/3] rounded-2xl bg-[#151d2e] animate-pulse"
-            />
+            <div key={i} className="aspect-[2/3] rounded-2xl bg-[#151d2e] animate-pulse" />
           ))}
         </div>
       </div>
@@ -210,7 +233,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* FEATURED (mobile) */}
+        {/* ═══════════════════════════════════════
+            FEATURED (mobile) — ĐÃ THÊM NÚT TIM
+            ═══════════════════════════════════════ */}
         {!showSaved && !search && featured && (
           <section className="anim-fadeInUp d-2 md:hidden">
             <div className="flex items-center justify-between mb-3">
@@ -226,6 +251,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-3 gap-2.5">
+              {/* FEATURED — phim lớn */}
               <Link
                 href={`/movie/${featured.id}`}
                 className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden card-hover group card-bg"
@@ -237,9 +263,19 @@ export default function HomePage() {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+                  {/* Badge HOT */}
                   <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg">
                     🔥 HOT
                   </div>
+
+                  {/* NÚT TIM — dùng component HeartButton */}
+                  <HeartButton
+                    movieId={featured.id}
+                    savedMovies={savedMovies}
+                    setSavedMovies={setSavedMovies}
+                  />
+
                   <div className="absolute inset-x-0 bottom-0 p-3.5">
                     <h3 className="text-base font-black text-white leading-tight line-clamp-2 mb-1">
                       {featured.title}
@@ -259,6 +295,7 @@ export default function HomePage() {
                 </div>
               </Link>
 
+              {/* 2 phim nhỏ — cũng thêm nút tim */}
               {sideMovies.map((m) => (
                 <Link
                   key={m.id}
@@ -272,6 +309,14 @@ export default function HomePage() {
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
+
+                    {/* NÚT TIM cho phim nhỏ */}
+                    <HeartButton
+                      movieId={m.id}
+                      savedMovies={savedMovies}
+                      setSavedMovies={setSavedMovies}
+                    />
+
                     <div className="absolute inset-x-0 bottom-0 p-2">
                       <h3 className="text-[11px] font-bold text-white leading-tight line-clamp-2">
                         {m.title}
