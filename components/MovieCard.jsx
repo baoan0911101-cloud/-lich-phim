@@ -58,7 +58,7 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
           {movie.season && (
-            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur text-[10px] font-bold text-amber-300">
+            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur text-[10px] font-bold text-amber-300 z-10">
               {movie.season}
             </div>
           )}
@@ -71,11 +71,11 @@ export default function MovieCard({ movie, index = 0, variant = 'grid' }) {
         </div>
       </Link>
 
-      {/* Nút tim — nằm NGOÀI Link, không bị overflow cắt */}
+      {/* Nút tim — nằm NGOÀI Link, đồng bộ top-3 right-3 với HOT */}
       <button
         onClick={toggleLike}
         aria-label="Lưu phim"
-        className={`absolute top-2 right-2 z-30 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 btn-tap hover:scale-110 ${
+        className={`absolute top-3 right-3 z-30 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 btn-tap hover:scale-110 ${
           liked
             ? 'bg-rose-500 shadow-[0_0_12px_rgba(251,113,133,0.8)]'
             : 'bg-black/60 hover:bg-black/80 border border-white/20'
