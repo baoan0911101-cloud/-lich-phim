@@ -8,6 +8,7 @@ export default function MoviePage() {
   const router = useRouter();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
 
   useEffect(() => {
     fetch(`/api/movies/${id}`)
@@ -25,6 +26,21 @@ export default function MoviePage() {
       });
   }, [id, router]);
 
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    setLiked(saved.includes(id));
+  }, [id]);
+
+  const toggleLike = () => {
+    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    const newSaved = liked
+      ? saved.filter((mid) => mid !== id)
+      : [...saved, id];
+    localStorage.setItem('savedMovies', JSON.stringify(newSaved));
+    setLiked(!liked);
+    window.dispatchEvent(new Event('savedMoviesChanged'));
+  };
+
   if (loading) {
     return (
       <div className="p-8 text-center text-slate-500">Đang tải...</div>
@@ -35,37 +51,65 @@ export default function MoviePage() {
 
   return (
     <div className="min-h-screen">
-      <div className="relative aspect-[16/10] anim-fadeIn">
-        <img
-          src={movie.poster}
-          alt={movie.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-[#0b1120]/40 to-transparent" />
+      {/* BANNER ẢNH NGANG */}
+      <div className="relative w-full bg-[#151d2e] anim-fadeIn">
+        <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
+          <img
+            src={movie.poster}
+            alt={movie.title}
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            onError={(e) => {
+              e.target.src = '';
+              e.target.style.display = 'none';
+            }}
+          />
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-[#0b1120]/30 to-transparent pointer-events-none" />
+        </div>
+
+        {/* Nút back */}
         <Link
           href="/"
-          className="absolute top-4 left-4 w-9 h-9 rounded-xl glass flex items-center justify-center text-white btn-tap hover:scale-110 transition-transform"
+          className="absolute top-4 left-4 w-10 h-10 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white text-lg btn-tap hover:scale-110 transition-transform z-20"
         >
           ←
         </Link>
       </div>
 
-      <div className="px-4 -mt-16 relative z-10">
+      {/* NỘI DUNG */}
+      <div className="px-4 -mt-20 relative z-10">
         <div className="flex gap-4 anim-fadeInUp d-1">
-          <img
-            src={movie.poster}
-            alt={movie.title}
-            className="w-24 h-36 object-cover rounded-xl shadow-2xl border border-[#1e293b]"
-          />
-          <div className="flex-1 pt-2">
-            <h1 className="text-xl font-black leading-tight text-white mb-1 line-clamp-2">
+          {/* POSTER NHỎ */}
+          <div className="w-28 h-40 rounded-xl shadow-2xl border-2 border-[#1e293b] overflow-hidden bg-[#151d2e] shrink-0">
+            <img
+              src={movie.poster}
+              alt={movie.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML =
+                  '<div class="w-full h-full flex items-center justify-center text-slate-500 text-3xl">🎬</div>';
+              }}
+            />
+          </div>
+
+          <div className="flex-1 pt-16">
+            <h1 className="text-xl font-black leading-tight text-white mb-1 line-clamp-2 drop-shadow-lg">
               {movie.title}
             </h1>
-            <p className="text-xs text-slate-500 italic mb-2">
+            <p className="text-xs text-slate-400 italic mb-2 drop-shadow">
               {movie.title_goc}
             </p>
+            {movie.season && (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 mb-2">
+                <span className="text-amber-400 text-xs">🎬</span>
+                <span className="text-xs font-bold text-amber-300">
+                  {movie.season}
+                </span>
+              </div>
+            )}
             {movie.total_duration && (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 ml-1">
                 <span className="text-amber-400 text-xs">⏱</span>
                 <span className="text-xs font-bold text-amber-300">
                   {movie.total_duration}
@@ -75,6 +119,7 @@ export default function MoviePage() {
           </div>
         </div>
 
+        {/* TAGS */}
         <div className="flex flex-wrap gap-1.5 mt-4 anim-fadeInUp d-2">
           {movie.tags?.map((t) => (
             <span
@@ -86,6 +131,7 @@ export default function MoviePage() {
           ))}
         </div>
 
+        {/* OVERVIEW */}
         {movie.overview && (
           <div className="mt-5 anim-fadeInUp d-3">
             <h2 className="text-xs font-bold text-slate-400 tracking-widest mb-2">
@@ -97,10 +143,19 @@ export default function MoviePage() {
           </div>
         )}
 
+        {/* BUTTONS */}
         <div className="grid grid-cols-3 gap-2 mt-5 anim-fadeInUp d-4">
-          <button className="py-2.5 rounded-xl card-bg text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 btn-tap hover:border-rose-400/50 transition-colors">
-            ♡ Lưu
+          <button
+            onClick={toggleLike}
+            className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 btn-tap transition-colors ${
+              liked
+                ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300'
+                : 'card-bg text-slate-200 hover:border-rose-400/50'
+            }`}
+          >
+            {liked ? '♥ Đã lưu' : '♡ Lưu'}
           </button>
+
           {movie.telegram_url && (
             <a
               href={movie.telegram_url}
@@ -123,6 +178,7 @@ export default function MoviePage() {
           )}
         </div>
 
+        {/* DANH SÁCH TẬP */}
         <div className="mt-6 pb-6">
           <h2 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
             DANH SÁCH TẬP ({movie.seasons?.length || 0})
