@@ -2,12 +2,14 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { formatRelativeDate } from '@/lib/formatDate';
 
 export default function MoviePage() {
   const { id } = useParams();
   const router = useRouter();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
 
   useEffect(() => {
     fetch(`/api/movies/${id}`)
@@ -25,6 +27,38 @@ export default function MoviePage() {
       });
   }, [id, router]);
 
+  // Check trạng thái liked lần đầu
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    setLiked(saved.includes(id));
+  }, [id]);
+
+  // Lắng nghe thay đổi từ card ngoài
+  useEffect(() => {
+    const handleChange = () => {
+      const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+      setLiked(saved.includes(id));
+    };
+    window.addEventListener('savedMoviesChanged', handleChange);
+    return () => window.removeEventListener('savedMoviesChanged', handleChange);
+  }, [id]);
+
+  const toggleLike = () => {
+    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    let newSaved;
+
+    if (saved.includes(id)) {
+      newSaved = saved.filter((mid) => mid !== id);
+      setLiked(false);
+    } else {
+      newSaved = [...saved, id];
+      setLiked(true);
+    }
+
+    localStorage.setItem('savedMovies', JSON.stringify(newSaved));
+    window.dispatchEvent(new Event('savedMoviesChanged'));
+  };
+
   if (loading) {
     return (
       <div className="p-8 text-center text-slate-500">Đang tải...</div>
@@ -35,7 +69,7 @@ export default function MoviePage() {
 
   return (
     <div className="min-h-screen">
-      <div className="relative aspect-[16/10] anim-fadeIn">
+      <div className="relative aspect-[16/10] anim-fadeIn bg-[#151d2e]">
         <img
           src={movie.poster}
           alt={movie.title}
@@ -44,7 +78,7 @@ export default function MoviePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-[#0b1120]/40 to-transparent" />
         <Link
           href="/"
-          className="absolute top-4 left-4 w-9 h-9 rounded-xl glass flex items-center justify-center text-white btn-tap hover:scale-110 transition-transform"
+          className="absolute top-4 left-4 w-9 h-9 rounded-xl glass flex items-center justify-center text-white btn-tap hover:scale-110 transition-transform z-10"
         >
           ←
         </Link>
@@ -64,14 +98,24 @@ export default function MoviePage() {
             <p className="text-xs text-slate-500 italic mb-2">
               {movie.title_goc}
             </p>
-            {movie.total_duration && (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                <span className="text-amber-400 text-xs">⏱</span>
-                <span className="text-xs font-bold text-amber-300">
-                  {movie.total_duration}
-                </span>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {movie.season && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30">
+                  <span className="text-rose-400 text-xs">🎬</span>
+                  <span className="text-xs font-bold text-rose-300">
+                    {movie.season}
+                  </span>
+                </div>
+              )}
+              {movie.total_duration && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <span className="text-amber-400 text-xs">⏱</span>
+                  <span className="text-xs font-bold text-amber-300">
+                    {movie.total_duration}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -97,10 +141,23 @@ export default function MoviePage() {
           </div>
         )}
 
+        {/* BUTTONS */}
         <div className="grid grid-cols-3 gap-2 mt-5 anim-fadeInUp d-4">
-          <button className="py-2.5 rounded-xl card-bg text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 btn-tap hover:border-rose-400/50 transition-colors">
-            ♡ Lưu
+          {/* NÚT LƯU PHIM */}
+          <button
+            onClick={toggleLike}
+            className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 btn-tap transition-all duration-300 ${
+              liked
+                ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300 shadow-[0_0_15px_rgba(251,113,133,0.3)]'
+                : 'card-bg text-slate-200 hover:border-rose-400/50'
+            }`}
+          >
+            <span className={liked ? 'animate-pulse' : ''}>
+              {liked ? '♥' : '♡'}
+            </span>
+            <span>{liked ? 'Đã lưu' : 'Lưu phim'}</span>
           </button>
+
           {movie.telegram_url && (
             <a
               href={movie.telegram_url}
