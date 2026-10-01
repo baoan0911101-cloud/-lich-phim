@@ -1,16 +1,39 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+// 🎨 BẢNG MÀU
+const LINK_COLORS = [
+  { id: 'sky', name: 'Xanh dương', bg: 'bg-sky-500/15', border: 'border-sky-500/40', text: 'text-sky-300' },
+  { id: 'indigo', name: 'Tím', bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300' },
+  { id: 'blue', name: 'Xanh đậm', bg: 'bg-blue-500/15', border: 'border-blue-500/40', text: 'text-blue-300' },
+  { id: 'emerald', name: 'Xanh lá', bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-300' },
+  { id: 'rose', name: 'Hồng', bg: 'bg-rose-500/15', border: 'border-rose-500/40', text: 'text-rose-300' },
+  { id: 'amber', name: 'Vàng', bg: 'bg-amber-500/15', border: 'border-amber-500/40', text: 'text-amber-300' },
+  { id: 'red', name: 'Đỏ', bg: 'bg-red-500/15', border: 'border-red-500/40', text: 'text-red-300' },
+  { id: 'pink', name: 'Hồng đậm', bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-300' },
+  { id: 'purple', name: 'Tím đậm', bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-300' },
+  { id: 'slate', name: 'Xám', bg: 'bg-slate-500/15', border: 'border-slate-500/40', text: 'text-slate-300' },
+];
+
+// 🎨 BẢNG ICON CÓ SẴN
+const ICON_PRESETS = [
+  { name: 'Telegram', path: '/icons/telegram.png', color: 'sky' },
+  { name: 'Facebook', path: '/icons/facebook.png', color: 'blue' },
+  { name: 'TikTok', path: '/icons/tiktok.png', color: 'slate' },
+  { name: 'Instagram', path: '/icons/instagram.png', color: 'pink' },
+  { name: 'Twitter', path: '/icons/twitter.png', color: 'sky' },
+  { name: 'WhatsApp', path: '/icons/whatsapp.png', color: 'emerald' },
+  { name: 'Reddit', path: '/icons/reddit.png', color: 'red' },
+  { name: 'Snapchat', path: '/icons/snapchat.png', color: 'amber' },
+];
+
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [checking, setChecking] = useState(false);
   const [loginMsg, setLoginMsg] = useState('');
-
-  // 'add' | 'manage' | 'edit'
   const [tab, setTab] = useState('add');
 
-  // Form state
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [movie, setMovie] = useState({
@@ -21,25 +44,28 @@ export default function AdminPage() {
     duration: '',
     tags: '',
     overview: '',
-    telegram_url: '',
-    messenger_url: '',
   });
   const [seasons, setSeasons] = useState([
     { name: 'Phần 1', facebook: '', youtube: '' },
   ]);
+  const [customLinks, setCustomLinks] = useState([
+    {
+      name: 'Vào nhóm Telegram',
+      url: '',
+      color: 'sky',
+      icon: '/icons/telegram.png',
+    },
+  ]);
 
-  // Danh sách phim
   const [movies, setMovies] = useState([]);
   const [loadingMovies, setLoadingMovies] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [toast, setToast] = useState('');
 
-  // Đang sửa phim nào
   const [editingId, setEditingId] = useState(null);
   const [editingOriginalTitle, setEditingOriginalTitle] = useState('');
 
-  // Load danh sách phim
   const loadMovies = async () => {
     setLoadingMovies(true);
     try {
@@ -58,7 +84,6 @@ export default function AdminPage() {
     }
   }, [unlocked, tab]);
 
-  // Đăng nhập
   const handleUnlock = async (e) => {
     e.preventDefault();
     setChecking(true);
@@ -83,7 +108,6 @@ export default function AdminPage() {
     setChecking(false);
   };
 
-  // Reset form
   const resetForm = () => {
     setMovie({
       title: '',
@@ -93,16 +117,21 @@ export default function AdminPage() {
       duration: '',
       tags: '',
       overview: '',
-      telegram_url: '',
-      messenger_url: '',
     });
     setSeasons([{ name: 'Phần 1', facebook: '', youtube: '' }]);
+    setCustomLinks([
+      {
+        name: 'Vào nhóm Telegram',
+        url: '',
+        color: 'sky',
+        icon: '/icons/telegram.png',
+      },
+    ]);
     setEditingId(null);
     setEditingOriginalTitle('');
     setMsg('');
   };
 
-  // Bắt đầu sửa phim
   const startEdit = (m) => {
     setEditingId(m.id);
     setEditingOriginalTitle(m.title);
@@ -110,12 +139,10 @@ export default function AdminPage() {
       title: m.title || '',
       title_goc: m.title_goc || '',
       poster: m.poster || '',
-      season: m.season || '',poster: movie.poster,
+      season: m.season || '',
       duration: m.total_duration || '',
       tags: (m.tags || []).join(', '),
       overview: m.overview || '',
-      telegram_url: m.telegram_url || '',
-      messenger_url: m.messenger_url || '',
     });
     setSeasons(
       m.seasons?.length
@@ -126,19 +153,54 @@ export default function AdminPage() {
           }))
         : [{ name: 'Phần 1', facebook: '', youtube: '' }]
     );
+
+    if (m.custom_links?.length) {
+      setCustomLinks(
+        m.custom_links.map((l) => ({
+          ...l,
+          icon: l.icon || '',
+        }))
+      );
+    } else {
+      const oldLinks = [];
+      if (m.telegram_url)
+        oldLinks.push({
+          name: 'Vào nhóm Telegram',
+          url: m.telegram_url,
+          color: 'sky',
+          icon: '/icons/telegram.png',
+        });
+      if (m.messenger_url)
+        oldLinks.push({
+          name: 'Chat Messenger',
+          url: m.messenger_url,
+          color: 'indigo',
+          icon: '',
+        });
+      setCustomLinks(
+        oldLinks.length
+          ? oldLinks
+          : [
+              {
+                name: 'Vào nhóm Telegram',
+                url: '',
+                color: 'sky',
+                icon: '/icons/telegram.png',
+              },
+            ]
+      );
+    }
+
     setMsg('');
     setTab('edit');
   };
 
-  // Xác nhận xoá
   const askDelete = (id, title) => {
     setConfirmDelete({ id, title });
   };
 
-  // Thực hiện xoá
   const doDelete = async () => {
     if (!confirmDelete) return;
-
     const { id, title } = confirmDelete;
     setDeletingId(id);
     setConfirmDelete(null);
@@ -149,7 +211,6 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, id }),
       });
-
       const data = await res.json();
 
       if (data.success) {
@@ -186,7 +247,23 @@ export default function AdminPage() {
     setSeasons(newSeasons);
   };
 
-  // Tạo id từ title (dùng cho thêm mới)
+  const addCustomLink = () => {
+    setCustomLinks([
+      ...customLinks,
+      { name: '', url: '', color: 'slate', icon: '' },
+    ]);
+  };
+
+  const removeCustomLink = (i) => {
+    setCustomLinks(customLinks.filter((_, idx) => idx !== i));
+  };
+
+  const updateCustomLink = (i, key, value) => {
+    const newLinks = [...customLinks];
+    newLinks[i][key] = value;
+    setCustomLinks(newLinks);
+  };
+
   const slugify = (str) =>
     str
       .toLowerCase()
@@ -197,11 +274,14 @@ export default function AdminPage() {
       .trim()
       .replace(/\s+/g, '-');
 
-  // Submit form (thêm hoặc sửa)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMsg('');
+
+    const validLinks = customLinks.filter(
+      (l) => l.name.trim() && l.url.trim()
+    );
 
     const movieData = {
       title: movie.title,
@@ -211,8 +291,7 @@ export default function AdminPage() {
       tags: movie.tags.split(',').map((t) => t.trim()).filter(Boolean),
       total_duration: movie.duration,
       overview: movie.overview,
-      telegram_url: movie.telegram_url,
-      messenger_url: movie.messenger_url,
+      custom_links: validLinks,
       seasons,
     };
 
@@ -220,20 +299,15 @@ export default function AdminPage() {
       let res, data;
 
       if (editingId) {
-        // === SỬA PHIM ===
         res = await fetch('/api/movies/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            password,
-            id: editingId,
-            movie: movieData,
-          }),
+          body: JSON.stringify({ password, id: editingId, movie: movieData }),
         });
         data = await res.json();
 
         if (data.success) {
-          setMsg('✅ Đã cập nhật! Thay đổi hiện ngay lập tức.');
+          setMsg('✅ Đã cập nhật!');
           setTimeout(() => {
             resetForm();
             setTab('edit');
@@ -243,7 +317,6 @@ export default function AdminPage() {
           setMsg('❌ Lỗi: ' + (data.error || 'Không rõ'));
         }
       } else {
-        // === THÊM PHIM ===
         const newId = slugify(movie.title);
         res = await fetch('/api/movies', {
           method: 'POST',
@@ -256,7 +329,7 @@ export default function AdminPage() {
         data = await res.json();
 
         if (data.success) {
-          setMsg('✅ Đã thêm! Phim hiện ngay lập tức.');
+          setMsg('✅ Đã thêm!');
           setMovie({
             title: '',
             title_goc: '',
@@ -265,10 +338,16 @@ export default function AdminPage() {
             duration: '',
             tags: '',
             overview: '',
-            telegram_url: '',
-            messenger_url: '',
           });
           setSeasons([{ name: 'Phần 1', facebook: '', youtube: '' }]);
+          setCustomLinks([
+            {
+              name: 'Vào nhóm Telegram',
+              url: '',
+              color: 'sky',
+              icon: '/icons/telegram.png',
+            },
+          ]);
         } else {
           setMsg('❌ Lỗi: ' + (data.error || 'Không rõ'));
         }
@@ -284,9 +363,6 @@ export default function AdminPage() {
     'w-full h-11 rounded-xl card-bg px-4 text-sm focus:outline-none focus:border-rose-400/50';
   const label = 'text-xs font-bold text-slate-400 mb-1.5 block';
 
-  // ═══════════════════════════════════════════
-  // CHƯA ĐĂNG NHẬP
-  // ═══════════════════════════════════════════
   if (!unlocked) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
@@ -296,9 +372,7 @@ export default function AdminPage() {
             <h1 className="text-xl font-black grad-text mb-1">
               Trang quản trị
             </h1>
-            <p className="text-xs text-slate-500">
-              Nhập mật khẩu để tiếp tục
-            </p>
+            <p className="text-xs text-slate-500">Nhập mật khẩu để tiếp tục</p>
           </div>
 
           <form onSubmit={handleUnlock} className="space-y-3">
@@ -333,9 +407,6 @@ export default function AdminPage() {
     );
   }
 
-  // ═══════════════════════════════════════════
-  // ĐÃ ĐĂNG NHẬP
-  // ═══════════════════════════════════════════
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-5">
@@ -353,7 +424,6 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => {
@@ -390,10 +460,8 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* ══════ TAB THÊM / SỬA (dùng chung form) ══════ */}
       {(tab === 'add' || tab === 'edit') && (
         <div>
-          {/* Nếu là sửa: hiện danh sách để chọn */}
           {tab === 'edit' && !editingId && (
             <div>
               <p className="text-xs text-slate-500 mb-3">
@@ -445,7 +513,6 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Form thêm/sửa */}
           {tab === 'edit' && editingId && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex items-center justify-between mb-4 p-3 rounded-xl bg-sky-500/10 border border-sky-500/30">
@@ -469,6 +536,10 @@ export default function AdminPage() {
                 addSeason={addSeason}
                 removeSeason={removeSeason}
                 updateSeason={updateSeason}
+                customLinks={customLinks}
+                addCustomLink={addCustomLink}
+                removeCustomLink={removeCustomLink}
+                updateCustomLink={updateCustomLink}
                 input={input}
                 label={label}
               />
@@ -491,7 +562,6 @@ export default function AdminPage() {
             </form>
           )}
 
-          {/* Form thêm mới */}
           {tab === 'add' && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <MovieForm
@@ -501,6 +571,10 @@ export default function AdminPage() {
                 addSeason={addSeason}
                 removeSeason={removeSeason}
                 updateSeason={updateSeason}
+                customLinks={customLinks}
+                addCustomLink={addCustomLink}
+                removeCustomLink={removeCustomLink}
+                updateCustomLink={updateCustomLink}
                 input={input}
                 label={label}
               />
@@ -525,15 +599,12 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ══════ TAB QUẢN LÝ (XOÁ) ══════ */}
       {tab === 'manage' && (
         <div>
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs text-slate-500">
               Tổng:{' '}
-              <span className="text-amber-400 font-bold">
-                {movies.length}
-              </span>{' '}
+              <span className="text-amber-400 font-bold">{movies.length}</span>{' '}
               phim
             </p>
             <button
@@ -596,15 +667,12 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ══════ MODAL XÁC NHẬN XOÁ ══════ */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 anim-fadeIn">
           <div className="card-bg rounded-2xl p-5 max-w-sm w-full anim-fadeInUp">
             <div className="text-center mb-4">
               <div className="text-4xl mb-2">⚠️</div>
-              <h3 className="text-lg font-bold text-white mb-1">
-                Xoá phim?
-              </h3>
+              <h3 className="text-lg font-bold text-white mb-1">Xoá phim?</h3>
               <p className="text-sm text-slate-400">
                 Bạn sắp xoá{' '}
                 <span className="text-rose-300 font-bold">
@@ -634,7 +702,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ══════ TOAST ══════ */}
       {toast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 card-bg rounded-xl px-4 py-3 shadow-2xl anim-fadeInUp max-w-sm">
           <p className="text-sm text-white text-center">{toast}</p>
@@ -645,7 +712,7 @@ export default function AdminPage() {
 }
 
 // ═══════════════════════════════════════════
-// COMPONENT FORM DÙNG CHUNG
+// FORM COMPONENT
 // ═══════════════════════════════════════════
 function MovieForm({
   movie,
@@ -654,6 +721,10 @@ function MovieForm({
   addSeason,
   removeSeason,
   updateSeason,
+  customLinks,
+  addCustomLink,
+  removeCustomLink,
+  updateCustomLink,
   input,
   label,
 }) {
@@ -690,7 +761,7 @@ function MovieForm({
           placeholder="https://... hoặc /posters/abc.jpg"
         />
       </div>
-            
+
       <div>
         <label className={label}>Mùa (VD: Mùa 9, Phần 2...)</label>
         <input
@@ -732,30 +803,150 @@ function MovieForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className={label}>Telegram URL</label>
-          <input
-            value={movie.telegram_url}
-            onChange={(e) =>
-              setMovie({ ...movie, telegram_url: e.target.value })
-            }
-            className={input}
-            placeholder="https://t.me/..."
-          />
-        </div>
-        <div>
-          <label className={label}>Messenger URL</label>
-          <input
-            value={movie.messenger_url}
-            onChange={(e) =>
-              setMovie({ ...movie, messenger_url: e.target.value })
-            }
-            className={input}
-            placeholder="https://m.me/..."
-          />
-        </div>
+      <hr className="border-[#1e293b]" />
+
+      {/* CUSTOM LINKS */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-bold text-sky-400">
+          🔗 Link liên hệ ({customLinks.length})
+        </h2>
+        <button
+          type="button"
+          onClick={addCustomLink}
+          className="text-xs px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 btn-tap"
+        >
+          + Thêm link
+        </button>
       </div>
+
+      {customLinks.map((link, i) => {
+        const selectedColor = LINK_COLORS.find((c) => c.id === link.color);
+
+        return (
+          <div key={i} className="card-bg rounded-xl p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                value={link.name}
+                onChange={(e) => updateCustomLink(i, 'name', e.target.value)}
+                placeholder="Tên (VD: Vào nhóm Telegram...)"
+                className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-sm font-bold"
+              />
+              {customLinks.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeCustomLink(i)}
+                  className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <input
+              value={link.url}
+              onChange={(e) => updateCustomLink(i, 'url', e.target.value)}
+              placeholder="https://..."
+              className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
+            />
+
+            {/* ICON PICKER */}
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 mb-1.5 block">
+                Icon
+              </label>
+
+              <div className="grid grid-cols-4 gap-2">
+                {ICON_PRESETS.map((ic, idx) => {
+                  const isSelected = link.icon === ic.path;
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      title={ic.name}
+                      onClick={() => {
+                        updateCustomLink(i, 'icon', ic.path);
+                        updateCustomLink(i, 'color', ic.color);
+                      }}
+                      className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 p-1.5 transition-all border-2 ${
+                        isSelected
+                          ? 'border-sky-400 bg-sky-500/20 scale-105 shadow-[0_0_12px_rgba(56,189,248,0.5)]'
+                          : 'border-white/10 bg-black/30 hover:border-sky-400/50 hover:bg-black/50'
+                      }`}
+                    >
+                      <img
+                        src={ic.path}
+                        alt={ic.name}
+                        className="w-6 h-6 object-contain"
+                        loading="lazy"
+                      />
+                      <span className="text-[8px] text-slate-400 font-bold truncate w-full text-center">
+                        {ic.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-2">
+                <label className="text-[10px] text-slate-500 font-bold block mb-1">
+                  Hoặc dán URL icon tùy chỉnh:
+                </label>
+                <input
+                  value={link.icon || ''}
+                  onChange={(e) => updateCustomLink(i, 'icon', e.target.value)}
+                  placeholder="https://..."
+                  className="w-full h-8 rounded-lg bg-black/40 px-3 text-xs"
+                />
+              </div>
+            </div>
+
+            {/* CHỌN MÀU */}
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 mb-1.5 block">
+                Màu hiển thị
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {LINK_COLORS.map((c) => {
+                  const active = link.color === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => updateCustomLink(i, 'color', c.id)}
+                      title={c.name}
+                      className={`w-7 h-7 rounded-lg border-2 transition-all ${c.bg} ${c.border} ${
+                        active
+                          ? 'scale-110 ring-2 ring-white/50 shadow-lg'
+                          : 'opacity-60 hover:opacity-100'
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* PREVIEW */}
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 mb-1.5 block">
+                Xem trước
+              </label>
+              <div
+                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 ${selectedColor?.bg} ${selectedColor?.border} ${selectedColor?.text}`}
+              >
+                {link.icon && (
+                  <img
+                    src={link.icon}
+                    alt=""
+                    className="w-4 h-4 object-contain"
+                  />
+                )}
+                <span className="truncate">{link.name || 'Tên link'}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
       <hr className="border-[#1e293b]" />
 
