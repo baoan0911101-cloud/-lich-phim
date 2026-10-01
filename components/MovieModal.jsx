@@ -63,12 +63,16 @@ export default function MovieModal({ movie, onClose }) {
       ? overviewText
       : overviewText.slice(0, 200) + '...';
 
+  // Custom links
+  const customLinks = (movie.custom_links || []).filter(
+    (l) => l.name && l.url
+  );
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-[modalFadeIn_0.3s_ease_both]"
       onClick={onClose}
     >
-      {/* WRAPPER NGOÀI */}
       <div
         className="relative w-full max-w-lg max-h-[90vh] animate-[modalScaleIn_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]"
         onClick={(e) => e.stopPropagation()}
@@ -154,45 +158,71 @@ export default function MovieModal({ movie, onClose }) {
               </div>
             )}
 
-            {/* NÚT LƯU + LIÊN HỆ */}
-            <div className="grid grid-cols-3 gap-2 mt-4">
+            {/* ═══════════════════════════════════════════ */}
+            {/* NÚT LƯU + LINK — 1 HÀNG NGANG TỰ CO GIÃN */}
+            {/* ═══════════════════════════════════════════ */}
+            <div className="flex gap-1.5 mt-4 flex-wrap sm:flex-nowrap">
+              {/* Nút Lưu phim */}
               <button
                 onClick={toggleLike}
-                className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 btn-tap transition-all duration-300 ${
+                className={`flex-1 min-w-[90px] py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 btn-tap transition-all duration-300 ${
                   liked
-                    ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300 shadow-[0_0_15px_rgba(251,113,133,0.3)]'
+                    ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300'
                     : 'card-bg text-slate-200 border border-[#1e293b] hover:border-rose-400/50'
                 }`}
               >
                 <span className={liked ? 'animate-pulse' : ''}>
                   {liked ? '♥' : '♡'}
                 </span>
-                <span>{liked ? 'Đã lưu' : 'Lưu phim'}</span>
+                <span className="truncate">
+                  {liked ? 'Đã lưu' : 'Lưu phim'}
+                </span>
               </button>
 
-              {movie.telegram_url && (
-                <a
-                  href={movie.telegram_url}
-                  target="_blank"
-                  rel="noopener"
-                  className="py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 btn-tap hover:bg-sky-500/20 transition-colors"
-                >
-                  ✈ Telegram
-                </a>
-              )}
+              {/* Custom links */}
+              {customLinks.map((link, i) => {
+                const colorMap = {
+                  sky: 'bg-sky-500/10 border-sky-500/30 text-sky-300',
+                  indigo:
+                    'bg-indigo-500/10 border-indigo-500/30 text-indigo-300',
+                  blue: 'bg-blue-500/10 border-blue-500/30 text-blue-300',
+                  emerald:
+                    'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+                  rose: 'bg-rose-500/10 border-rose-500/30 text-rose-300',
+                  amber: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+                  red: 'bg-red-500/10 border-red-500/30 text-red-300',
+                  pink: 'bg-pink-500/10 border-pink-500/30 text-pink-300',
+                  purple:
+                    'bg-purple-500/10 border-purple-500/30 text-purple-300',
+                  slate: 'bg-slate-500/10 border-slate-500/30 text-slate-300',
+                };
+                const colorClass = colorMap[link.color] || colorMap.slate;
 
-              {movie.messenger_url && (
-                <a
-                  href={movie.messenger_url}
-                  target="_blank"
-                  rel="noopener"
-                  className="py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 btn-tap hover:bg-indigo-500/20 transition-colors"
-                >
-                  💬 Chat
-                </a>
-              )}
+                return (
+                  <a
+                    key={i}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener"
+                    className={`flex-1 min-w-[70px] py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1 btn-tap hover:opacity-90 transition-opacity ${colorClass}`}
+                  >
+                    {link.icon ? (
+                      <img
+                        src={link.icon}
+                        alt=""
+                        className="w-4 h-4 object-contain shrink-0"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span>🔗</span>
+                    )}
+                    <span className="truncate">{link.name}</span>
+                  </a>
+                );
+              })}
             </div>
 
+            {/* NÚT XEM CHI TIẾT */}
             <Link
               href={`/movie/${movie.id}`}
               className="block w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white text-sm font-black text-center btn-tap shadow-[0_8px_24px_rgba(251,113,133,0.4)] hover:shadow-[0_12px_32px_rgba(251,113,133,0.6)] transition-all"
@@ -200,7 +230,7 @@ export default function MovieModal({ movie, onClose }) {
               ▶ Xem chi tiết phim
             </Link>
 
-            {/* DANH SÁCH TẬP — BẤM ĐƯỢC */}
+            {/* DANH SÁCH TẬP */}
             {movie.seasons?.length > 0 && (
               <div className="mt-5">
                 <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
