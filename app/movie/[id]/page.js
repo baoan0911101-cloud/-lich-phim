@@ -203,7 +203,7 @@ export default function MoviePage() {
                       className="flex items-center gap-3 mb-3 group cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-400/30 to-orange-500/30 border border-rose-400/50 flex items-center justify-center text-sm shrink-0 group-hover:from-rose-400/50 group-hover:to-orange-500/50 transition-colors">
-                        ▶
+                        🎥
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold text-white group-hover:text-rose-300 transition-colors truncate">
