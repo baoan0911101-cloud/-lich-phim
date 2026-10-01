@@ -26,10 +26,9 @@ export async function POST(request) {
         tags = $5,
         total_duration = $6,
         overview = $7,
-        telegram_url = $8,
-        messenger_url = $9,
+        custom_links = $8,
         updated_at = NOW()
-       WHERE id = $10`,
+       WHERE id = $9`,
       [
         movie.title,
         movie.title_goc || null,
@@ -38,8 +37,7 @@ export async function POST(request) {
         movie.tags || [],
         movie.total_duration || null,
         movie.overview || null,
-        movie.telegram_url || null,
-        movie.messenger_url || null,
+        JSON.stringify(movie.custom_links || []),
         id,
       ]
     );
