@@ -42,8 +42,8 @@ export async function POST(request) {
     }
 
     await query(
-      `INSERT INTO movies (id, title, title_goc, poster, season, tags, total_duration, overview, telegram_url, messenger_url, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())`,
+      `INSERT INTO movies (id, title, title_goc, poster, season, tags, total_duration, overview, custom_links, status, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
       [
         movie.id,
         movie.title,
@@ -53,8 +53,7 @@ export async function POST(request) {
         movie.tags || [],
         movie.total_duration || null,
         movie.overview || null,
-        movie.telegram_url || null,
-        movie.messenger_url || null,
+        JSON.stringify(movie.custom_links || []),
         'HÔM NAY',
       ]
     );
