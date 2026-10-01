@@ -65,6 +65,10 @@ export default function MoviePage() {
 
   if (!movie) return null;
 
+  // Check có custom_links hoặc telegram/messenger cũ
+  const hasCustomLinks = (movie.custom_links || []).length > 0;
+  const hasOldLinks = movie.telegram_url || movie.messenger_url;
+
   return (
     <div className="min-h-screen">
       <div className="relative aspect-[16/10] anim-fadeIn bg-[#151d2e]">
@@ -140,10 +144,11 @@ export default function MoviePage() {
         )}
 
         {/* BUTTONS */}
-        <div className="grid grid-cols-3 gap-2 mt-5 anim-fadeInUp d-4">
+        <div className="mt-5 anim-fadeInUp d-4">
+          {/* Nút Lưu phim */}
           <button
             onClick={toggleLike}
-            className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 btn-tap transition-all duration-300 ${
+            className={`w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 btn-tap transition-all duration-300 ${
               liked
                 ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300 shadow-[0_0_15px_rgba(251,113,133,0.3)]'
                 : 'card-bg text-slate-200 hover:border-rose-400/50'
@@ -155,25 +160,73 @@ export default function MoviePage() {
             <span>{liked ? 'Đã lưu' : 'Lưu phim'}</span>
           </button>
 
-          {movie.telegram_url && (
-            <a
-              href={movie.telegram_url}
-              target="_blank"
-              rel="noopener"
-              className="py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 btn-tap"
-            >
-              ✈ Telegram
-            </a>
-          )}
-          {movie.messenger_url && (
-            <a
-              href={movie.messenger_url}
-              target="_blank"
-              rel="noopener"
-              className="py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 btn-tap"
-            >
-              💬 Chat
-            </a>
+          {/* Custom links — ưu tiên hiển thị */}
+          {(hasCustomLinks || hasOldLinks) && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+              {/* Custom links mới */}
+              {hasCustomLinks &&
+                movie.custom_links.map((link, i) => {
+                  if (!link.name || !link.url) return null;
+
+                  const colorMap = {
+                    sky: 'bg-sky-500/10 border-sky-500/30 text-sky-300',
+                    indigo: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300',
+                    blue: 'bg-blue-500/10 border-blue-500/30 text-blue-300',
+                    emerald: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+                    rose: 'bg-rose-500/10 border-rose-500/30 text-rose-300',
+                    amber: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+                    red: 'bg-red-500/10 border-red-500/30 text-red-300',
+                    pink: 'bg-pink-500/10 border-pink-500/30 text-pink-300',
+                    purple: 'bg-purple-500/10 border-purple-500/30 text-purple-300',
+                    slate: 'bg-slate-500/10 border-slate-500/30 text-slate-300',
+                  };
+                  const colorClass = colorMap[link.color] || colorMap.slate;
+
+                  return (
+                    <a
+                      key={i}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener"
+                      className={`py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 btn-tap hover:opacity-90 transition-opacity ${colorClass}`}
+                    >
+                      {link.icon ? (
+                        <img
+                          src={link.icon}
+                          alt=""
+                          className="w-4 h-4 object-contain shrink-0"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="text-base">🔗</span>
+                      )}
+                      <span className="truncate">{link.name}</span>
+                    </a>
+                  );
+                })}
+
+              {/* Fallback cho phim cũ chưa có custom_links */}
+              {!hasCustomLinks && movie.telegram_url && (
+                <a
+                  href={movie.telegram_url}
+                  target="_blank"
+                  rel="noopener"
+                  className="py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 btn-tap"
+                >
+                  ✈ Telegram
+                </a>
+              )}
+              {!hasCustomLinks && movie.messenger_url && (
+                <a
+                  href={movie.messenger_url}
+                  target="_blank"
+                  rel="noopener"
+                  className="py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 btn-tap"
+                >
+                  💬 Chat
+                </a>
+              )}
+            </div>
           )}
         </div>
 
