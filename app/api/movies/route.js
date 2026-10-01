@@ -55,7 +55,6 @@ export async function POST(request) {
         movie.overview || null,
         movie.telegram_url || null,
         movie.messenger_url || null,
-        JSON.stringify(movie.custom_links || []),
         'HÔM NAY',
       ]
     );
