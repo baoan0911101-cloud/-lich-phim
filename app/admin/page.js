@@ -77,6 +77,7 @@ export default function AdminPage() {
     poster: '',
     season: '',
     status: 'Sắp chiếu',
+    show_at: '',
   });
 
   const loadMovies = async () => {
@@ -172,6 +173,7 @@ export default function AdminPage() {
       poster: '',
       season: '',
       status: 'Sắp chiếu',
+      show_at: '',
     });
   };
 
@@ -885,6 +887,25 @@ export default function AdminPage() {
               />
             </div>
 
+            {/* ⏰ Ô CHỌN GIỜ XEM */}
+            <div>
+              <label className={label}>
+                ⏰ Giờ xem được (bỏ trống = xem ngay)
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduleForm.show_at || ''}
+                onChange={(e) =>
+                  setScheduleForm({ ...scheduleForm, show_at: e.target.value })
+                }
+                className={input}
+              />
+              <p className="text-[10px] text-slate-500 mt-1">
+                Đến giờ này, tập phim mới xem được. Trước đó bấm sẽ hiện thông
+                báo chờ.
+              </p>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -952,6 +973,17 @@ export default function AdminPage() {
                   <p className="text-[10px] text-slate-500 truncate">
                     {item.season} · {item.status}
                   </p>
+                  {item.show_at && (
+                    <p className="text-[10px] text-amber-400 font-bold truncate mt-0.5">
+                      ⏰{' '}
+                      {new Date(item.show_at).toLocaleString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  )}
                 </div>
 
                 <button
