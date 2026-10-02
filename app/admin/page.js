@@ -66,6 +66,19 @@ export default function AdminPage() {
   const [editingId, setEditingId] = useState(null);
   const [editingOriginalTitle, setEditingOriginalTitle] = useState('');
 
+  // 📅 SCHEDULE STATE
+  const [scheduleItems, setScheduleItems] = useState([]);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    day: 'HÔM NAY',
+    date: '',
+    movie_id: '',
+    title: '',
+    poster: '',
+    season: '',
+    status: 'Sắp chiếu',
+  });
+
   const loadMovies = async () => {
     setLoadingMovies(true);
     try {
@@ -78,9 +91,27 @@ export default function AdminPage() {
     setLoadingMovies(false);
   };
 
+  const loadSchedule = async () => {
+    setLoadingSchedule(true);
+    try {
+      const res = await fetch('/api/schedule');
+      const data = await res.json();
+      setScheduleItems(data.schedule || []);
+    } catch {
+      setScheduleItems([]);
+    }
+    setLoadingSchedule(false);
+  };
+
   useEffect(() => {
     if (unlocked && (tab === 'manage' || tab === 'edit')) {
       loadMovies();
+    }
+  }, [unlocked, tab]);
+
+  useEffect(() => {
+    if (unlocked && tab === 'schedule') {
+      loadSchedule();
     }
   }, [unlocked, tab]);
 
@@ -130,6 +161,18 @@ export default function AdminPage() {
     setEditingId(null);
     setEditingOriginalTitle('');
     setMsg('');
+  };
+
+  const resetScheduleForm = () => {
+    setScheduleForm({
+      day: 'HÔM NAY',
+      date: '',
+      movie_id: '',
+      title: '',
+      poster: '',
+      season: '',
+      status: 'Sắp chiếu',
+    });
   };
 
   const startEdit = (m) => {
@@ -359,6 +402,60 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  // 📅 SUBMIT LỊCH CHIẾU
+  const handleScheduleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMsg('');
+
+    try {
+      const res = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password,
+          item: scheduleForm,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setMsg('✅ Đã thêm lịch chiếu!');
+        resetScheduleForm();
+        setTimeout(() => loadSchedule(), 500);
+      } else {
+        setMsg('❌ Lỗi: ' + (data.error || 'Không rõ'));
+      }
+    } catch (err) {
+      setMsg('❌ Lỗi: ' + err.message);
+    }
+
+    setLoading(false);
+  };
+
+  // 📅 XOÁ LỊCH CHIẾU
+  const handleScheduleDelete = async (id) => {
+    if (!confirm('Xoá lịch chiếu này?')) return;
+
+    try {
+      const res = await fetch('/api/schedule/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, id }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setToast('✅ Đã xoá');
+        setTimeout(() => setToast(''), 2000);
+        loadSchedule();
+      }
+    } catch (err) {
+      setToast('❌ Lỗi: ' + err.message);
+      setTimeout(() => setToast(''), 2000);
+    }
+  };
+
   const input =
     'w-full h-11 rounded-xl card-bg px-4 text-sm focus:outline-none focus:border-rose-400/50';
   const label = 'text-xs font-bold text-slate-400 mb-1.5 block';
@@ -424,13 +521,14 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      {/* TABS */}
+      <div className="flex gap-1.5 mb-6">
         <button
           onClick={() => {
             setTab('add');
             resetForm();
           }}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold btn-tap transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold btn-tap transition-all ${
             tab === 'add'
               ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-lg'
               : 'card-bg text-slate-400'
@@ -440,7 +538,7 @@ export default function AdminPage() {
         </button>
         <button
           onClick={() => setTab('edit')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold btn-tap transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold btn-tap transition-all ${
             tab === 'edit'
               ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-lg'
               : 'card-bg text-slate-400'
@@ -450,13 +548,23 @@ export default function AdminPage() {
         </button>
         <button
           onClick={() => setTab('manage')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold btn-tap transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold btn-tap transition-all ${
             tab === 'manage'
               ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-lg'
               : 'card-bg text-slate-400'
           }`}
         >
           🗑 Xoá
+        </button>
+        <button
+          onClick={() => setTab('schedule')}
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold btn-tap transition-all ${
+            tab === 'schedule'
+              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
+              : 'card-bg text-slate-400'
+          }`}
+        >
+          📅 Lịch
         </button>
       </div>
 
@@ -667,6 +775,204 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* 📅 TAB LỊCH CHIẾU */}
+      {tab === 'schedule' && (
+        <div>
+          {/* FORM THÊM LỊCH CHIẾU */}
+          <form
+            onSubmit={handleScheduleSubmit}
+            className="card-bg rounded-2xl p-4 mb-5 space-y-3"
+          >
+            <h3 className="text-sm font-bold text-amber-400 mb-2">
+              ➕ Thêm lịch chiếu
+            </h3>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={label}>Ngày</label>
+                <select
+                  value={scheduleForm.day}
+                  onChange={(e) =>
+                    setScheduleForm({ ...scheduleForm, day: e.target.value })
+                  }
+                  className={input}
+                >
+                  <option value="HÔM NAY">HÔM NAY</option>
+                  <option value="NGÀY MAI">NGÀY MAI</option>
+                  <option value="THỨ 2">THỨ 2</option>
+                  <option value="THỨ 3">THỨ 3</option>
+                  <option value="THỨ 4">THỨ 4</option>
+                  <option value="THỨ 5">THỨ 5</option>
+                  <option value="THỨ 6">THỨ 6</option>
+                  <option value="THỨ 7">THỨ 7</option>
+                  <option value="CHỦ NHẬT">CHỦ NHẬT</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={label}>Ngày cụ thể</label>
+                <input
+                  value={scheduleForm.date}
+                  onChange={(e) =>
+                    setScheduleForm({ ...scheduleForm, date: e.target.value })
+                  }
+                  placeholder="28/09"
+                  className={input}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className={label}>Tên phim *</label>
+              <input
+                required
+                value={scheduleForm.title}
+                onChange={(e) =>
+                  setScheduleForm({ ...scheduleForm, title: e.target.value })
+                }
+                placeholder="VD: Quỷ Tiên Ô Đỏ"
+                className={input}
+              />
+            </div>
+
+            <div>
+              <label className={label}>Link ảnh poster</label>
+              <input
+                value={scheduleForm.poster}
+                onChange={(e) =>
+                  setScheduleForm({ ...scheduleForm, poster: e.target.value })
+                }
+                placeholder="https://... hoặc /posters/..."
+                className={input}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={label}>Mùa</label>
+                <input
+                  value={scheduleForm.season}
+                  onChange={(e) =>
+                    setScheduleForm({ ...scheduleForm, season: e.target.value })
+                  }
+                  placeholder="Mùa 9"
+                  className={input}
+                />
+              </div>
+
+              <div>
+                <label className={label}>Trạng thái</label>
+                <input
+                  value={scheduleForm.status}
+                  onChange={(e) =>
+                    setScheduleForm({ ...scheduleForm, status: e.target.value })
+                  }
+                  placeholder="Sắp chiếu / Đã có"
+                  className={input}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className={label}>ID phim (nếu có trên web)</label>
+              <input
+                value={scheduleForm.movie_id}
+                onChange={(e) =>
+                  setScheduleForm({ ...scheduleForm, movie_id: e.target.value })
+                }
+                placeholder="quy-tien-o-do (bấm vào sẽ mở phim)"
+                className={input}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm btn-tap ${
+                loading ? 'opacity-50' : ''
+              }`}
+            >
+              {loading ? '⏳ Đang lưu...' : '📅 Thêm lịch chiếu'}
+            </button>
+
+            {msg && (
+              <div className="text-xs text-center py-2 rounded-lg card-bg">
+                {msg}
+              </div>
+            )}
+          </form>
+
+          {/* DANH SÁCH LỊCH CHIẾU */}
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-slate-500">
+              Tổng:{' '}
+              <span className="text-amber-400 font-bold">
+                {scheduleItems.length}
+              </span>{' '}
+              mục
+            </p>
+            <button
+              onClick={loadSchedule}
+              className="text-xs px-3 py-1.5 rounded-lg card-bg text-slate-300 btn-tap"
+            >
+              {loadingSchedule ? '⏳' : '🔄 Làm mới'}
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {scheduleItems.map((item) => (
+              <div
+                key={item.id}
+                className="card-bg rounded-xl p-3 flex items-center gap-3"
+              >
+                {item.poster ? (
+                  <img
+                    src={item.poster}
+                    alt=""
+                    className="w-10 h-14 object-cover rounded-lg shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-14 rounded-lg bg-slate-700 flex items-center justify-center text-slate-500 text-xs">
+                    🎬
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[10px] font-bold text-amber-300">
+                      {item.day}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      {item.date}
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-bold text-white line-clamp-1">
+                    {item.title}
+                  </h4>
+                  <p className="text-[10px] text-slate-500 truncate">
+                    {item.season} · {item.status}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => handleScheduleDelete(item.id)}
+                  className="shrink-0 w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap flex items-center justify-center"
+                >
+                  🗑
+                </button>
+              </div>
+            ))}
+
+            {scheduleItems.length === 0 && !loadingSchedule && (
+              <div className="text-center py-12 opacity-50">
+                <div className="text-4xl mb-2">📅</div>
+                <p className="text-sm text-slate-500">Chưa có lịch chiếu</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 anim-fadeIn">
           <div className="card-bg rounded-2xl p-5 max-w-sm w-full anim-fadeInUp">
@@ -849,7 +1155,6 @@ function MovieForm({
               className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
             />
 
-            {/* ICON PICKER */}
             <div>
               <label className="text-[10px] font-bold text-slate-500 mb-1.5 block">
                 Icon
@@ -901,7 +1206,6 @@ function MovieForm({
               </div>
             </div>
 
-            {/* CHỌN MÀU */}
             <div>
               <label className="text-[10px] font-bold text-slate-500 mb-1.5 block">
                 Màu hiển thị
@@ -926,7 +1230,6 @@ function MovieForm({
               </div>
             </div>
 
-            {/* PREVIEW */}
             <div>
               <label className="text-[10px] font-bold text-slate-500 mb-1.5 block">
                 Xem trước
