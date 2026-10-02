@@ -27,7 +27,7 @@ export async function POST(request) {
     // 🎯 XOÁ LỊCH CHIẾU
     await query('DELETE FROM schedule WHERE id = $1', [id]);
 
-    // 🎯 NẾU CÓ PHIM LIÊN KẾT → XOÁ LUÔN PHIM
+    // 🎯 NẾU CÓ PHIM LIÊN KẾT → XOÁ LUÔN PHIM + TẬP + LỊCH KHÁC
     if (movieId) {
       // Xoá tập của phim
       await query('DELETE FROM seasons WHERE movie_id = $1', [movieId]);
