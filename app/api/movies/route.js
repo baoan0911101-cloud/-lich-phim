@@ -1,89 +1,40 @@
 import { query } from '@/lib/db';
 
-// GET: lấy danh sách phim
-export async function GET() {
+export async function GET(request, { params }) {
   try {
-    const moviesResult = await query(
-      'SELECT * FROM movies ORDER BY COALESCE(updated_at, created_at) DESC'
+    const { id } = params;
+
+    // Lấy thông tin phim
+    const movieResult = await query('SELECT * FROM movies WHERE id = $1', [id]);
+    if (movieResult.rows.length === 0) {
+      return Response.json({ error: 'Không tìm thấy phim' }, { status: 404 });
+    }
+
+    const movie = movieResult.rows[0];
+
+    // 🎯 Lấy show_at từ schedule (nếu có)
+    // Nếu phim có trong lịch chiếu với show_at → gán vào movie.show_at
+    const scheduleResult = await query(
+      `SELECT show_at FROM schedule 
+       WHERE movie_id = $1 AND show_at IS NOT NULL 
+       ORDER BY show_at DESC LIMIT 1`,
+      [id]
     );
+
+    if (scheduleResult.rows.length > 0) {
+      movie.show_at = scheduleResult.rows[0].show_at;
+    }
+
+    // Lấy danh sách tập
     const seasonsResult = await query(
-      'SELECT * FROM seasons ORDER BY movie_id, sort_order'
+      'SELECT * FROM seasons WHERE movie_id = $1 ORDER BY sort_order',
+      [id]
     );
 
-    const seasonsByMovie = {};
-    seasonsResult.rows.forEach((s) => {
-      if (!seasonsByMovie[s.movie_id]) seasonsByMovie[s.movie_id] = [];
-      seasonsByMovie[s.movie_id].push(s);
+    return Response.json({
+      movie: { ...movie, seasons: seasonsResult.rows },
     });
-
-    const movies = moviesResult.rows.map((m) => ({
-      ...m,
-      seasons: seasonsByMovie[m.id] || [],
-    }));
-
-    return Response.json({ movies });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
-  }
-}
-
-// POST: thêm phim mới
-export async function POST(request) {
-  try {
-    const body = await request.json();
-    const { password, movie } = body;
-
-    if (password !== process.env.ADMIN_PASSWORD) {
-      return Response.json({ error: 'Sai mật khẩu' }, { status: 401 });
-    }
-
-    if (!movie?.id || !movie?.title) {
-      return Response.json({ error: 'Thiếu thông tin' }, { status: 400 });
-    }
-
-    await query(
-      `INSERT INTO movies (id, title, title_goc, poster, season, tags, total_duration, overview, custom_links, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
-      [
-        movie.id,
-        movie.title,
-        movie.title_goc || null,
-        movie.poster || null,
-        movie.season || null,
-        movie.tags || [],
-        movie.total_duration || null,
-        movie.overview || null,
-        JSON.stringify(movie.custom_links || []),
-        'HÔM NAY',
-      ]
-    );
-
-    if (movie.seasons?.length) {
-      for (let i = 0; i < movie.seasons.length; i++) {
-        const s = movie.seasons[i];
-        await query(
-          `INSERT INTO seasons (movie_id, name, duration, facebook, youtube, sort_order)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            movie.id,
-            s.name,
-            s.duration || null,
-            s.facebook || null,
-            s.youtube || null,
-            i,
-          ]
-        );
-      }
-    }
-
-    return Response.json({ success: true, id: movie.id });
-  } catch (err) {
-    if (err.code === '23505') {
-      return Response.json(
-        { error: 'Phim đã tồn tại (trùng id)' },
-        { status: 400 }
-      );
-    }
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
