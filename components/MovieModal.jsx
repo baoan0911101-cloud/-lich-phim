@@ -6,6 +6,7 @@ import { formatRelativeDate } from '@/lib/formatDate';
 export default function MovieModal({ movie, onClose }) {
   const [liked, setLiked] = useState(false);
   const [showFullOverview, setShowFullOverview] = useState(false);
+  const [showNotice, setShowNotice] = useState(false);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
@@ -37,6 +38,19 @@ export default function MovieModal({ movie, onClose }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
+  // 🎯 CHECK GIỜ XEM
+  const isTimeLocked =
+    movie.show_at && new Date(movie.show_at) > new Date();
+  const showAtText = movie.show_at
+    ? new Date(movie.show_at).toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
+
   const toggleLike = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -63,7 +77,6 @@ export default function MovieModal({ movie, onClose }) {
       ? overviewText
       : overviewText.slice(0, 200) + '...';
 
-  // Custom links
   const customLinks = (movie.custom_links || []).filter(
     (l) => l.name && l.url
   );
@@ -77,7 +90,6 @@ export default function MovieModal({ movie, onClose }) {
         className="relative w-full max-w-lg max-h-[90vh] animate-[modalScaleIn_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* NÚT ĐÓNG */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -89,9 +101,7 @@ export default function MovieModal({ movie, onClose }) {
           ✕
         </button>
 
-        {/* KHUNG MODAL */}
         <div className="w-full max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl bg-[#0f1729] border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.9)]">
-          {/* ẢNH BANNER */}
           <div className="relative aspect-[16/9] overflow-hidden bg-[#151d2e] rounded-t-3xl">
             <img
               src={movie.poster}
@@ -107,7 +117,6 @@ export default function MovieModal({ movie, onClose }) {
             )}
           </div>
 
-          {/* NỘI DUNG */}
           <div className="px-4 pb-4 -mt-12 relative z-10">
             {movie.tags?.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-3">
@@ -142,6 +151,26 @@ export default function MovieModal({ movie, onClose }) {
               </div>
             )}
 
+            {/* ⏰ THÔNG BÁO CHỜ GIỜ */}
+            {isTimeLocked && (
+              <div className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 anim-fadeIn">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">⏰</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-amber-300 mb-1">
+                      Chưa đến giờ xem
+                    </p>
+                    <p className="text-[11px] text-amber-200/80">
+                      Phim sẽ mở vào lúc{' '}
+                      <span className="font-bold text-amber-300">
+                        {showAtText}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {overviewText && (
               <div className="mb-3">
                 <p className="text-sm text-slate-300 leading-relaxed">
@@ -158,14 +187,10 @@ export default function MovieModal({ movie, onClose }) {
               </div>
             )}
 
-            {/* ═══════════════════════════════════════════ */}
-            {/* NÚT LƯU + LINK — 1 HÀNG NGANG TỰ CO GIÃN */}
-            {/* ═══════════════════════════════════════════ */}
             <div className="flex gap-1.5 mt-4 flex-wrap sm:flex-nowrap">
-              {/* Nút Lưu phim */}
               <button
                 onClick={toggleLike}
-                className={`flex-1 min-w-[90px] py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 btn-tap transition-all duration-300 ${
+                className={`flex-1 min-w-0 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 btn-tap transition-all duration-300 ${
                   liked
                     ? 'bg-rose-500/20 border border-rose-500/50 text-rose-300'
                     : 'card-bg text-slate-200 border border-[#1e293b] hover:border-rose-400/50'
@@ -179,21 +204,17 @@ export default function MovieModal({ movie, onClose }) {
                 </span>
               </button>
 
-              {/* Custom links */}
               {customLinks.map((link, i) => {
                 const colorMap = {
                   sky: 'bg-sky-500/10 border-sky-500/30 text-sky-300',
-                  indigo:
-                    'bg-indigo-500/10 border-indigo-500/30 text-indigo-300',
+                  indigo: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300',
                   blue: 'bg-blue-500/10 border-blue-500/30 text-blue-300',
-                  emerald:
-                    'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+                  emerald: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
                   rose: 'bg-rose-500/10 border-rose-500/30 text-rose-300',
                   amber: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
                   red: 'bg-red-500/10 border-red-500/30 text-red-300',
                   pink: 'bg-pink-500/10 border-pink-500/30 text-pink-300',
-                  purple:
-                    'bg-purple-500/10 border-purple-500/30 text-purple-300',
+                  purple: 'bg-purple-500/10 border-purple-500/30 text-purple-300',
                   slate: 'bg-slate-500/10 border-slate-500/30 text-slate-300',
                 };
                 const colorClass = colorMap[link.color] || colorMap.slate;
@@ -204,7 +225,7 @@ export default function MovieModal({ movie, onClose }) {
                     href={link.url}
                     target="_blank"
                     rel="noopener"
-                    className={`flex-1 min-w-[70px] py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1 btn-tap hover:opacity-90 transition-opacity ${colorClass}`}
+                    className={`flex-1 min-w-0 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1 btn-tap hover:opacity-90 transition-opacity ${colorClass}`}
                   >
                     {link.icon ? (
                       <img
@@ -222,13 +243,22 @@ export default function MovieModal({ movie, onClose }) {
               })}
             </div>
 
-            {/* NÚT XEM CHI TIẾT */}
-            <Link
-              href={`/movie/${movie.id}`}
-              className="block w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white text-sm font-black text-center btn-tap shadow-[0_8px_24px_rgba(251,113,133,0.4)] hover:shadow-[0_12px_32px_rgba(251,113,133,0.6)] transition-all"
-            >
-              ▶ Xem chi tiết phim
-            </Link>
+            {/* NÚT XEM CHI TIẾT — CHẶN NẾU CHƯA ĐẾN GIỜ */}
+            {isTimeLocked ? (
+              <button
+                onClick={() => setShowNotice(true)}
+                className="block w-full mt-3 py-3 rounded-xl bg-slate-700/60 text-slate-400 text-sm font-black text-center cursor-not-allowed border border-slate-600/40"
+              >
+                🔒 Chưa đến giờ xem
+              </button>
+            ) : (
+              <Link
+                href={`/movie/${movie.id}`}
+                className="block w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white text-sm font-black text-center btn-tap shadow-[0_8px_24px_rgba(251,113,133,0.4)] hover:shadow-[0_12px_32px_rgba(251,113,133,0.6)] transition-all"
+              >
+                ▶ Xem chi tiết phim
+              </Link>
+            )}
 
             {/* DANH SÁCH TẬP */}
             {movie.seasons?.length > 0 && (
@@ -239,7 +269,8 @@ export default function MovieModal({ movie, onClose }) {
 
                 <div className="grid grid-cols-2 gap-2">
                   {movie.seasons.slice(0, 6).map((s, i) => {
-                    const isAvailable = !!s.facebook;
+                    const isAvailable = !!s.facebook && !isTimeLocked;
+                    const isLocked = isTimeLocked && !!s.facebook;
                     const Wrapper = isAvailable ? 'a' : 'div';
                     const wrapperProps = isAvailable
                       ? {
@@ -256,6 +287,8 @@ export default function MovieModal({ movie, onClose }) {
                         className={`card-bg rounded-xl p-2.5 flex items-center gap-2 transition-all duration-300 ${
                           isAvailable
                             ? 'cursor-pointer hover:border-rose-400/50 hover:bg-[#1a2540] hover:-translate-y-0.5 active:scale-[0.97] group'
+                            : isLocked
+                            ? 'opacity-70 cursor-not-allowed'
                             : 'opacity-60 cursor-not-allowed'
                         }`}
                       >
@@ -263,10 +296,12 @@ export default function MovieModal({ movie, onClose }) {
                           className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 transition-colors ${
                             isAvailable
                               ? 'bg-gradient-to-br from-rose-400/30 to-orange-500/30 border border-rose-400/50 group-hover:from-rose-400/50 group-hover:to-orange-500/50'
+                              : isLocked
+                              ? 'bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-500/30'
                               : 'bg-gradient-to-br from-slate-400/10 to-slate-500/10 border border-slate-500/20'
                           }`}
                         >
-                          {isAvailable ? '▶' : '🎞'}
+                          {isAvailable ? '▶' : isLocked ? '🔒' : '🎞'}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div
@@ -283,6 +318,10 @@ export default function MovieModal({ movie, onClose }) {
                               <span className="text-emerald-400 font-bold">
                                 ● Có thể xem
                               </span>
+                            ) : isLocked ? (
+                              <span className="text-amber-400 font-bold">
+                                ⏰ Chờ giờ xem
+                              </span>
                             ) : (
                               '⏱ Đang cập nhật'
                             )}
@@ -293,7 +332,7 @@ export default function MovieModal({ movie, onClose }) {
                   })}
                 </div>
 
-                {movie.seasons.length > 6 && (
+                {movie.seasons.length > 6 && !isTimeLocked && (
                   <Link
                     href={`/movie/${movie.id}`}
                     className="block text-center text-xs text-amber-400 hover:text-amber-300 mt-3 font-bold transition-colors"
@@ -315,6 +354,36 @@ export default function MovieModal({ movie, onClose }) {
           </div>
         </div>
       </div>
+
+      {/* MODAL THÔNG BÁO CHƯA ĐẾN GIỜ */}
+      {showNotice && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm anim-fadeIn"
+          onClick={() => setShowNotice(false)}
+        >
+          <div
+            className="card-bg rounded-2xl p-5 max-w-sm w-full text-center anim-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-5xl mb-3 anim-float">⏰</div>
+            <h3 className="text-lg font-black text-white mb-2">
+              Chưa đến giờ xem
+            </h3>
+            <p className="text-sm text-slate-400 mb-4">
+              Phim sẽ mở vào lúc{' '}
+              <span className="font-bold text-amber-300">
+                {showAtText}
+              </span>
+            </p>
+            <button
+              onClick={() => setShowNotice(false)}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-sm btn-tap"
+            >
+              Đã hiểu
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
