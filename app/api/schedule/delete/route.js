@@ -12,9 +12,38 @@ export async function POST(request) {
       return Response.json({ error: 'Thiếu id' }, { status: 400 });
     }
 
+    // 🎯 Lấy movie_id của lịch chiếu này
+    const scheduleResult = await query(
+      'SELECT movie_id FROM schedule WHERE id = $1',
+      [id]
+    );
+
+    if (scheduleResult.rows.length === 0) {
+      return Response.json({ error: 'Lịch không tồn tại' }, { status: 404 });
+    }
+
+    const movieId = scheduleResult.rows[0].movie_id;
+
+    // 🎯 XOÁ LỊCH CHIẾU
     await query('DELETE FROM schedule WHERE id = $1', [id]);
 
-    return Response.json({ success: true });
+    // 🎯 NẾU CÓ PHIM LIÊN KẾT → XOÁ LUÔN PHIM
+    if (movieId) {
+      // Xoá tập của phim
+      await query('DELETE FROM seasons WHERE movie_id = $1', [movieId]);
+      
+      // Xoá các lịch chiếu khác của phim này (nếu có)
+      await query('DELETE FROM schedule WHERE movie_id = $1', [movieId]);
+      
+      // Xoá phim
+      await query('DELETE FROM movies WHERE id = $1', [movieId]);
+    }
+
+    return Response.json({ 
+      success: true, 
+      deletedMovie: movieId ? true : false,
+      movieId: movieId 
+    });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
