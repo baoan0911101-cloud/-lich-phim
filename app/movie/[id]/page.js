@@ -10,6 +10,7 @@ export default function MoviePage() {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
+  const [showNotice, setShowNotice] = useState(false);
 
   useEffect(() => {
     fetch(`/api/movies/${id}`)
@@ -64,6 +65,19 @@ export default function MoviePage() {
   }
 
   if (!movie) return null;
+
+  // 🎯 CHECK GIỜ XEM
+  const isTimeLocked =
+    movie.show_at && new Date(movie.show_at) > new Date();
+  const showAtText = movie.show_at
+    ? new Date(movie.show_at).toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
 
   const customLinks = (movie.custom_links || []).filter(
     (l) => l.name && l.url
@@ -143,11 +157,28 @@ export default function MoviePage() {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════ */}
-        {/* LƯU PHIM + LINKS — 1 HÀNG NGANG TỰ CO GIÃN */}
-        {/* ═══════════════════════════════════════════ */}
+        {/* THÔNG BÁO CHỜ GIỜ */}
+        {isTimeLocked && (
+          <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 anim-fadeInUp d-3">
+            <div className="flex items-start gap-3">
+              <div className="text-3xl anim-float">⏰</div>
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-amber-300 mb-1">
+                  Chưa đến giờ xem
+                </h3>
+                <p className="text-xs text-amber-200/80">
+                  Phim sẽ mở vào lúc{' '}
+                  <span className="font-bold text-amber-300">
+                    {showAtText}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BUTTONS */}
         <div className="flex gap-1.5 mt-5 anim-fadeInUp d-4">
-          {/* Nút Lưu phim */}
           <button
             onClick={toggleLike}
             className={`flex-1 min-w-0 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 btn-tap transition-all duration-300 ${
@@ -162,14 +193,12 @@ export default function MoviePage() {
             <span className="truncate">{liked ? 'Đã lưu' : 'Lưu phim'}</span>
           </button>
 
-          {/* Custom links */}
           {customLinks.map((link, i) => {
             const colorMap = {
               sky: 'bg-sky-500/10 border-sky-500/30 text-sky-300',
               indigo: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300',
               blue: 'bg-blue-500/10 border-blue-500/30 text-blue-300',
-              emerald:
-                'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+              emerald: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
               rose: 'bg-rose-500/10 border-rose-500/30 text-rose-300',
               amber: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
               red: 'bg-red-500/10 border-red-500/30 text-red-300',
@@ -202,7 +231,6 @@ export default function MoviePage() {
             );
           })}
 
-          {/* Fallback cho phim cũ chưa có custom_links */}
           {customLinks.length === 0 && movie.telegram_url && (
             <a
               href={movie.telegram_url}
@@ -232,7 +260,9 @@ export default function MoviePage() {
 
           <div className="space-y-3">
             {movie.seasons?.map((s, i) => {
-              const isAvailable = !!s.facebook;
+              const hasLink = !!s.facebook;
+              const isAvailable = hasLink && !isTimeLocked;
+              const isLocked = hasLink && isTimeLocked;
 
               return (
                 <div
@@ -242,7 +272,6 @@ export default function MoviePage() {
                   }`}
                   style={{ animationDelay: `${0.25 + i * 0.06}s` }}
                 >
-                  {/* HEADER TẬP — BẤM ĐƯỢC NẾU CÓ LINK */}
                   {isAvailable ? (
                     <a
                       href={s.facebook}
@@ -267,6 +296,23 @@ export default function MoviePage() {
                         →
                       </div>
                     </a>
+                  ) : isLocked ? (
+                    <div
+                      onClick={() => setShowNotice(true)}
+                      className="flex items-center gap-3 mb-3 cursor-pointer group"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center text-sm shrink-0">
+                        🔒
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-slate-300 truncate">
+                          {s.name}
+                        </div>
+                        <div className="text-[10px] text-amber-400 font-bold mt-0.5">
+                          ⏰ Chờ giờ xem
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex items-center gap-3 mb-3 opacity-60">
                       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-400/10 to-slate-500/10 border border-slate-500/20 flex items-center justify-center text-sm shrink-0">
@@ -283,9 +329,9 @@ export default function MoviePage() {
                     </div>
                   )}
 
-                  {/* NÚT PHỤ — Facebook + YouTube */}
+                  {/* NÚT PHỤ */}
                   <div className="flex gap-2">
-                    {s.facebook ? (
+                    {isAvailable ? (
                       <a
                         href={s.facebook}
                         target="_blank"
@@ -294,12 +340,19 @@ export default function MoviePage() {
                       >
                         <span className="font-black">f</span> Facebook
                       </a>
+                    ) : isLocked ? (
+                      <button
+                        onClick={() => setShowNotice(true)}
+                        className="flex-1 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5"
+                      >
+                        🔒 Chờ giờ xem
+                      </button>
                     ) : (
                       <div className="flex-1 py-2.5 rounded-xl bg-[#151d2e] border border-[#1e293b] text-slate-500 text-xs font-bold flex items-center justify-center">
                         Chưa có link
                       </div>
                     )}
-                    {s.youtube && (
+                    {isAvailable && s.youtube && (
                       <a
                         href={s.youtube}
                         target="_blank"
@@ -316,6 +369,34 @@ export default function MoviePage() {
           </div>
         </div>
       </div>
+
+      {/* MODAL THÔNG BÁO */}
+      {showNotice && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm anim-fadeIn"
+          onClick={() => setShowNotice(false)}
+        >
+          <div
+            className="card-bg rounded-2xl p-5 max-w-sm w-full text-center anim-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-5xl mb-3 anim-float">⏰</div>
+            <h3 className="text-lg font-black text-white mb-2">
+              Chưa đến giờ xem
+            </h3>
+            <p className="text-sm text-slate-400 mb-4">
+              Phim sẽ mở vào lúc{' '}
+              <span className="font-bold text-amber-300">{showAtText}</span>
+            </p>
+            <button
+              onClick={() => setShowNotice(false)}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-sm btn-tap"
+            >
+              Đã hiểu
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
