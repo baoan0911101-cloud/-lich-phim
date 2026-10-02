@@ -36,6 +36,51 @@ const GENRE_PRESETS = [
   'Học đường', 'Võ hiệp', 'Vô hạn lưu', '3D', '2D',
 ];
 
+// 📅 TỰ ĐỘNG TÍNH NGÀY CỤ THỂ TỪ "DAY"
+const calculateDate = (day) => {
+  const today = new Date();
+  let targetDate = new Date(today);
+  const dayUpper = day.toUpperCase();
+
+  if (dayUpper === 'HÔM NAY') {
+    targetDate = today;
+  } else if (dayUpper === 'NGÀY MAI') {
+    targetDate.setDate(today.getDate() + 1);
+  } else if (dayUpper === 'THỨ 2') {
+    const currentDay = today.getDay();
+    const daysUntil = (1 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 3') {
+    const currentDay = today.getDay();
+    const daysUntil = (2 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 4') {
+    const currentDay = today.getDay();
+    const daysUntil = (3 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 5') {
+    const currentDay = today.getDay();
+    const daysUntil = (4 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 6') {
+    const currentDay = today.getDay();
+    const daysUntil = (5 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 7') {
+    const currentDay = today.getDay();
+    const daysUntil = (6 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'CHỦ NHẬT') {
+    const currentDay = today.getDay();
+    const daysUntil = (0 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  }
+
+  const d = String(targetDate.getDate()).padStart(2, '0');
+  const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+  return `${d}/${m}`;
+};
+
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [unlocked, setUnlocked] = useState(false);
@@ -81,7 +126,7 @@ export default function AdminPage() {
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
     day: 'HÔM NAY',
-    date: '',
+    date: calculateDate('HÔM NAY'),
     movie_id: '',
     title: '',
     poster: '',
@@ -90,7 +135,6 @@ export default function AdminPage() {
     show_at: '',
   });
 
-  // 🎬 Chế độ lịch: 'existing' (chọn phim có sẵn) | 'new' (tạo phim mới)
   const [scheduleMode, setScheduleMode] = useState('existing');
 
   const loadMovies = async () => {
@@ -181,7 +225,7 @@ export default function AdminPage() {
   const resetScheduleForm = () => {
     setScheduleForm({
       day: 'HÔM NAY',
-      date: '',
+      date: calculateDate('HÔM NAY'),
       movie_id: '',
       title: '',
       poster: '',
@@ -372,7 +416,6 @@ export default function AdminPage() {
       .trim()
       .replace(/\s+/g, '-');
 
-  // 🎬 SUBMIT PHIM MỚI
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -459,7 +502,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  // 📅 SUBMIT LỊCH CHIẾU (CHỌN PHIM CÓ SẴN)
   const handleScheduleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -490,7 +532,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  // 🎬📅 SUBMIT PHIM MỚI + LỊCH CÙNG LÚC
   const handleNewMovieSchedule = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -500,7 +541,6 @@ export default function AdminPage() {
       (l) => l.name.trim() && l.url.trim()
     );
 
-    // Bước 1: Tạo phim mới
     const movieData = {
       title: movie.title,
       title_goc: movie.title_goc,
@@ -516,7 +556,6 @@ export default function AdminPage() {
     try {
       const newId = slugify(movie.title);
 
-      // 1. Tạo phim
       const movieRes = await fetch('/api/movies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -533,7 +572,6 @@ export default function AdminPage() {
         return;
       }
 
-      // 2. Tạo lịch chiếu cho phim vừa tạo
       const scheduleRes = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -719,7 +757,6 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* CHẾ ĐỘ THÊM PHIM */}
           {addMode === 'movie' && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <MovieForm
@@ -756,10 +793,8 @@ export default function AdminPage() {
             </form>
           )}
 
-          {/* CHẾ ĐỘ RA LỊCH PHIM */}
           {addMode === 'schedule' && (
             <div>
-              {/* TOGGLE CHẾ ĐỘ */}
               <div className="flex gap-1.5 mb-4 p-1 rounded-xl bg-black/30">
                 <button
                   type="button"
@@ -785,7 +820,6 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              {/* CHẾ ĐỘ 1: CHỌN PHIM CÓ SẴN */}
               {scheduleMode === 'existing' && (
                 <form
                   onSubmit={handleScheduleSubmit}
@@ -800,12 +834,14 @@ export default function AdminPage() {
                       <label className={label}>Ngày</label>
                       <select
                         value={scheduleForm.day}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const newDay = e.target.value;
                           setScheduleForm({
                             ...scheduleForm,
-                            day: e.target.value,
-                          })
-                        }
+                            day: newDay,
+                            date: calculateDate(newDay),
+                          });
+                        }}
                         className={input}
                       >
                         <option value="HÔM NAY">HÔM NAY</option>
@@ -932,7 +968,6 @@ export default function AdminPage() {
                 </form>
               )}
 
-              {/* CHẾ ĐỘ 2: TẠO PHIM MỚI + LÊN LỊCH */}
               {scheduleMode === 'new' && (
                 <form
                   onSubmit={handleNewMovieSchedule}
@@ -942,7 +977,6 @@ export default function AdminPage() {
                     🎬➕📅 Tạo phim mới + Lên lịch
                   </h3>
 
-                  {/* NGÀY GIỜ */}
                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
                     <h4 className="text-xs font-bold text-amber-300">
                       📅 Thông tin lịch chiếu
@@ -953,12 +987,14 @@ export default function AdminPage() {
                         <label className={label}>Ngày</label>
                         <select
                           value={scheduleForm.day}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const newDay = e.target.value;
                             setScheduleForm({
                               ...scheduleForm,
-                              day: e.target.value,
-                            })
-                          }
+                              day: newDay,
+                              date: calculateDate(newDay),
+                            });
+                          }}
                           className={input}
                         >
                           <option value="HÔM NAY">HÔM NAY</option>
@@ -1023,7 +1059,6 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* FORM PHIM ĐẦY ĐỦ */}
                   <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30">
                     <h4 className="text-xs font-bold text-sky-300 mb-3">
                       🎬 Thông tin phim
@@ -1066,7 +1101,6 @@ export default function AdminPage() {
                 </form>
               )}
 
-              {/* DANH SÁCH LỊCH ĐÃ THÊM */}
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-slate-500">
                   Lịch đã thêm:{' '}
@@ -1370,7 +1404,7 @@ export default function AdminPage() {
 }
 
 // ═══════════════════════════════════════════
-// FORM COMPONENT (giữ nguyên)
+// FORM COMPONENT
 // ═══════════════════════════════════════════
 function MovieForm({
   movie,
@@ -1441,7 +1475,6 @@ function MovieForm({
         />
       </div>
 
-      {/* 🏷 THỂ LOẠI */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label className="text-xs font-bold text-slate-400">
@@ -1551,7 +1584,6 @@ function MovieForm({
 
       <hr className="border-[#1e293b]" />
 
-      {/* CUSTOM LINKS */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-bold text-sky-400">
           🔗 Link liên hệ ({customLinks.length})
