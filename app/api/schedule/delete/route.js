@@ -12,7 +12,7 @@ export async function POST(request) {
       return Response.json({ error: 'Thiếu id' }, { status: 400 });
     }
 
-    // 🎯 Lấy movie_id của lịch chiếu này
+    // 🎯 Lấy movie_id của lịch chiếu
     const scheduleResult = await query(
       'SELECT movie_id FROM schedule WHERE id = $1',
       [id]
@@ -24,25 +24,20 @@ export async function POST(request) {
 
     const movieId = scheduleResult.rows[0].movie_id;
 
-    // 🎯 XOÁ LỊCH CHIẾU
+    // Xoá lịch chiếu
     await query('DELETE FROM schedule WHERE id = $1', [id]);
 
-    // 🎯 NẾU CÓ PHIM LIÊN KẾT → XOÁ LUÔN PHIM + TẬP + LỊCH KHÁC
+    // 🎯 Nếu có phim liên kết → xoá luôn
     if (movieId) {
-      // Xoá tập của phim
       await query('DELETE FROM seasons WHERE movie_id = $1', [movieId]);
-      
-      // Xoá các lịch chiếu khác của phim này (nếu có)
       await query('DELETE FROM schedule WHERE movie_id = $1', [movieId]);
-      
-      // Xoá phim
       await query('DELETE FROM movies WHERE id = $1', [movieId]);
     }
 
-    return Response.json({ 
-      success: true, 
-      deletedMovie: movieId ? true : false,
-      movieId: movieId 
+    return Response.json({
+      success: true,
+      deletedMovie: !!movieId,
+      movieId: movieId || null,
     });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
