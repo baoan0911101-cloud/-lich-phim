@@ -27,13 +27,42 @@ const ICON_PRESETS = [
   { name: 'Snapchat', path: '/icons/snapchat.png', color: 'amber' },
 ];
 
+// 🏷 DANH SÁCH THỂ LOẠI CÓ SẴN
+const GENRE_PRESETS = [
+  'Hoàn Thành',
+  'Nữ Chính',
+  'Nam Chính',
+  'Tu Tiên',
+  'Vả mặt',
+  'Xuyên Không',
+  'Hài Hước',
+  'Tình Cảm',
+  'Main Có Não',
+  'Nghịch tập',
+  'Hệ Thống',
+  'Hiện Đại',
+  'Vô địch lưu',
+  'Xuyên Thư',
+  'Đô thị dị năng',
+  'Trọng sinh',
+  'Fantasy',
+  'Kinh Dị',
+  'Mạt thế',
+  'Võng du',
+  'Học đường',
+  'Võ hiệp',
+  'Vô hạn lưu',
+  '3D',
+  '2D',
+];
+
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [checking, setChecking] = useState(false);
   const [loginMsg, setLoginMsg] = useState('');
-  const [tab, setTab] = useState('add'); // add | edit | manage
-  const [addMode, setAddMode] = useState('movie'); // movie | schedule
+  const [tab, setTab] = useState('add');
+  const [addMode, setAddMode] = useState('movie');
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
@@ -111,7 +140,6 @@ export default function AdminPage() {
     }
   }, [unlocked, tab]);
 
-  // Load movies + schedule khi vào tab add
   useEffect(() => {
     if (unlocked && tab === 'add') {
       loadMovies();
@@ -180,7 +208,6 @@ export default function AdminPage() {
     });
   };
 
-  // 🎬 CHỌN PHIM TỪ DROPDOWN
   const selectMovieForSchedule = (movieId) => {
     if (!movieId) {
       setScheduleForm({
@@ -337,6 +364,22 @@ export default function AdminPage() {
     setCustomLinks(newLinks);
   };
 
+  // 🏷 Toggle thể loại
+  const toggleTag = (tag) => {
+    const currentTags = movie.tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    if (currentTags.includes(tag)) {
+      const newTags = currentTags.filter((t) => t !== tag);
+      setMovie({ ...movie, tags: newTags.join(', ') });
+    } else {
+      const newTags = [...currentTags, tag];
+      setMovie({ ...movie, tags: newTags.join(', ') });
+    }
+  };
+
   const slugify = (str) =>
     str
       .toLowerCase()
@@ -421,7 +464,6 @@ export default function AdminPage() {
               icon: '/icons/telegram.png',
             },
           ]);
-          // Reload movies để dropdown có phim mới
           setTimeout(() => loadMovies(), 500);
         } else {
           setMsg('❌ Lỗi: ' + (data.error || 'Không rõ'));
@@ -434,7 +476,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  // 📅 SUBMIT LỊCH CHIẾU
   const handleScheduleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -465,7 +506,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  // 📅 XOÁ LỊCH CHIẾU
   const handleScheduleDelete = async (id) => {
     if (!confirm('Xoá lịch chiếu này?')) return;
 
@@ -554,7 +594,6 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* TABS CHÍNH */}
       <div className="flex gap-1.5 mb-6">
         <button
           onClick={() => {
@@ -592,12 +631,8 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* TAB THÊM / LỊCH — TOGGLE BÊN TRONG */}
-      {/* ═══════════════════════════════════════════ */}
       {tab === 'add' && (
         <div>
-          {/* TOGGLE CHẾ ĐỘ */}
           <div className="flex gap-2 mb-5 p-1 rounded-2xl card-bg">
             <button
               onClick={() => setAddMode('movie')}
@@ -621,7 +656,6 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* CHẾ ĐỘ THÊM PHIM */}
           {addMode === 'movie' && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <MovieForm
@@ -635,6 +669,7 @@ export default function AdminPage() {
                 addCustomLink={addCustomLink}
                 removeCustomLink={removeCustomLink}
                 updateCustomLink={updateCustomLink}
+                toggleTag={toggleTag}
                 input={input}
                 label={label}
               />
@@ -657,7 +692,6 @@ export default function AdminPage() {
             </form>
           )}
 
-          {/* CHẾ ĐỘ RA LỊCH PHIM */}
           {addMode === 'schedule' && (
             <div>
               <form
@@ -709,7 +743,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* 🎬 CHỌN PHIM TỪ DROPDOWN */}
                 <div>
                   <label className={label}>
                     🎬 Chọn phim có sẵn (nếu có trên web)
@@ -728,13 +761,8 @@ export default function AdminPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Chọn phim → tự động điền tên, poster, mùa. Bấm vào phim
-                    trên lịch sẽ mở đúng phim này.
-                  </p>
                 </div>
 
-                {/* HIỂN THỊ PHIM ĐÃ CHỌN */}
                 {scheduleForm.movie_id && (
                   <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/30">
                     <p className="text-[10px] text-sky-300 font-bold">
@@ -812,7 +840,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* ⏰ Ô CHỌN GIỜ XEM */}
                 <div>
                   <label className={label}>
                     ⏰ Giờ xem được (bỏ trống = xem ngay)
@@ -828,10 +855,6 @@ export default function AdminPage() {
                     }
                     className={input}
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Đến giờ này, tập phim mới xem được. Trước đó bấm sẽ hiện
-                    thông báo chờ.
-                  </p>
                 </div>
 
                 <button
@@ -851,7 +874,6 @@ export default function AdminPage() {
                 )}
               </form>
 
-              {/* DANH SÁCH LỊCH CHIẾU ĐÃ THÊM */}
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-slate-500">
                   Lịch đã thêm:{' '}
@@ -937,7 +959,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* TAB SỬA */}
       {tab === 'edit' && (
         <div>
           {!editingId && (
@@ -1018,6 +1039,7 @@ export default function AdminPage() {
                 addCustomLink={addCustomLink}
                 removeCustomLink={removeCustomLink}
                 updateCustomLink={updateCustomLink}
+                toggleTag={toggleTag}
                 input={input}
                 label={label}
               />
@@ -1042,7 +1064,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* TAB XOÁ */}
       {tab === 'manage' && (
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -1111,7 +1132,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* MODAL XÁC NHẬN XOÁ */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 anim-fadeIn">
           <div className="card-bg rounded-2xl p-5 max-w-sm w-full anim-fadeInUp">
@@ -1170,6 +1190,7 @@ function MovieForm({
   addCustomLink,
   removeCustomLink,
   updateCustomLink,
+  toggleTag,
   input,
   label,
 }) {
@@ -1227,14 +1248,104 @@ function MovieForm({
         />
       </div>
 
+      {/* 🏷 CHỌN THỂ LOẠI BẰNG NÚT */}
       <div>
-        <label className={label}>Thể loại (cách nhau dấu phẩy)</label>
-        <input
-          value={movie.tags}
-          onChange={(e) => setMovie({ ...movie, tags: e.target.value })}
-          className={input}
-          placeholder="Tu Tiên, Võ hiệp, Main Có Não"
-        />
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-xs font-bold text-slate-400">
+            Thể loại (
+            {movie.tags.split(',').filter((t) => t.trim()).length} đã chọn)
+          </label>
+          {movie.tags && (
+            <button
+              type="button"
+              onClick={() => setMovie({ ...movie, tags: '' })}
+              className="text-[10px] text-rose-300 hover:text-rose-200 btn-tap font-bold"
+            >
+              ✕ Xoá hết
+            </button>
+          )}
+        </div>
+
+        {/* HIỂN THỊ TAG ĐÃ CHỌN */}
+        {movie.tags.split(',').filter((t) => t.trim()).length > 0 && (
+          <div className="mb-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex flex-wrap gap-1.5">
+            {movie.tags
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+              .map((tag, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/20 border border-amber-500/40 text-[10px] font-bold text-amber-300"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className="text-amber-300 hover:text-rose-300 font-bold"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+          </div>
+        )}
+
+        {/* GRID CHỌN THỂ LOẠI */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-[200px] overflow-y-auto no-scrollbar p-2 rounded-xl bg-black/30 border border-white/5">
+          {GENRE_PRESETS.map((tag) => {
+            const isSelected = movie.tags
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+              .includes(tag);
+
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className={`px-2 py-1.5 rounded-lg text-[10px] font-bold btn-tap transition-all border ${
+                  isSelected
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-400 shadow-lg scale-105'
+                    : 'bg-[#151d2e] text-slate-400 border-[#1e293b] hover:text-slate-200 hover:border-amber-500/50'
+                }`}
+              >
+                {isSelected && '✓ '}
+                {tag}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* INPUT TÙY CHỈNH THÊM */}
+        <details className="mt-2">
+          <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-300 font-bold">
+            ➕ Thêm thể loại tùy chỉnh
+          </summary>
+          <input
+            type="text"
+            placeholder="Nhập thể loại mới rồi Enter"
+            className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs mt-2"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const newTag = e.target.value.trim();
+                if (newTag && !movie.tags.includes(newTag)) {
+                  const currentTags = movie.tags
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter(Boolean);
+                  setMovie({
+                    ...movie,
+                    tags: [...currentTags, newTag].join(', '),
+                  });
+                  e.target.value = '';
+                }
+              }
+            }}
+          />
+        </details>
       </div>
 
       <div>
