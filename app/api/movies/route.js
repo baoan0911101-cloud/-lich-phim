@@ -1,11 +1,22 @@
 import { query } from '@/lib/db';
 
-// GET: lấy danh sách phim
+// GET: lấy danh sách phim (ẩn phim chưa đến giờ xem)
 export async function GET() {
   try {
+    // 🎯 Lọc phim:
+    // - KHÔNG có trong schedule với show_at tương lai
+    // - HOẶC không có schedule nào
     const moviesResult = await query(
-      'SELECT * FROM movies ORDER BY COALESCE(updated_at, created_at) DESC'
+      `SELECT m.* FROM movies m
+       WHERE NOT EXISTS (
+         SELECT 1 FROM schedule s
+         WHERE s.movie_id = m.id
+           AND s.show_at IS NOT NULL
+           AND s.show_at > NOW()
+       )
+       ORDER BY COALESCE(m.updated_at, m.created_at) DESC`
     );
+
     const seasonsResult = await query(
       'SELECT * FROM seasons ORDER BY movie_id, sort_order'
     );
