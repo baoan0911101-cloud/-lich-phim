@@ -606,8 +606,16 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  // 🎯 XOÁ LỊCH CHIẾU + XOÁ PHIM (nếu có)
   const handleScheduleDelete = async (id) => {
-    if (!confirm('Xoá lịch chiếu này?')) return;
+    const item = scheduleItems.find((s) => s.id === id);
+    const hasMovie = item?.movie_id;
+
+    const confirmMsg = hasMovie
+      ? `⚠️ XOÁ LỊCH CHIẾU SẼ XOÁ LUÔN PHIM "${item.title}"!\n\nPhim sẽ bị xoá hoàn toàn khỏi web.\n\nBạn có chắc không?`
+      : 'Xoá lịch chiếu này?';
+
+    if (!confirm(confirmMsg)) return;
 
     try {
       const res = await fetch('/api/schedule/delete', {
@@ -618,9 +626,15 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (data.success) {
-        setToast('✅ Đã xoá');
-        setTimeout(() => setToast(''), 2000);
+        if (data.deletedMovie) {
+          setToast(`✅ Đã xoá lịch + phim "${item?.title || ''}"`);
+        } else {
+          setToast('✅ Đã xoá lịch chiếu');
+        }
+        setTimeout(() => setToast(''), 3000);
+        // Load lại cả lịch và phim
         loadSchedule();
+        loadMovies();
       }
     } catch (err) {
       setToast('❌ Lỗi: ' + err.message);
@@ -1161,11 +1175,17 @@ export default function AdminPage() {
                           })}
                         </p>
                       )}
+                      {item.movie_id && (
+                        <p className="text-[9px] text-rose-300 truncate mt-0.5 font-bold">
+                          ⚠️ Xoá lịch này = xoá luôn phim
+                        </p>
+                      )}
                     </div>
 
                     <button
                       onClick={() => handleScheduleDelete(item.id)}
                       className="shrink-0 w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap flex items-center justify-center"
+                      title="Xoá lịch (và xoá phim nếu có)"
                     >
                       🗑
                     </button>
