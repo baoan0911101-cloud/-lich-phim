@@ -33,8 +33,8 @@ export async function POST(request) {
     const sortOrder = (maxOrder.rows[0]?.max_order || 0) + 1;
 
     const result = await query(
-      `INSERT INTO schedule (day, date, movie_id, title, poster, season, status, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO schedule (day, date, movie_id, title, poster, season, status, show_at, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         item.day,
@@ -44,6 +44,7 @@ export async function POST(request) {
         item.poster || null,
         item.season || null,
         item.status || 'Sắp chiếu',
+        item.show_at || null,
         sortOrder,
       ]
     );
