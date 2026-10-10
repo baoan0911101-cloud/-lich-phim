@@ -54,6 +54,7 @@ export default function LichChieuPage() {
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState('Tất cả');
   const [selectedMovie, setSelectedMovie] = useState(null);
+  const [movieCache, setMovieCache] = useState({}); // 🎯 CACHE
 
   useEffect(() => {
     Promise.all([
@@ -78,10 +79,57 @@ export default function LichChieuPage() {
 
   const days = Object.keys(grouped);
 
-  // 🎯 MỞ POPUP — GỌI API ĐỂ LẤY FULL DATA CÓ SEASONS
+  // 🎯 PRELOAD KHI HOVER
+  const preloadMovie = (movieId) => {
+    if (!movieId || movieCache[movieId]) return;
+
+    fetch(`/api/movies/${movieId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setMovieCache((prev) => ({ ...prev, [movieId]: data.movie }));
+      })
+      .catch(() => {});
+  };
+
+  // 🎯 MỞ POPUP — DÙNG CACHE NẾU CÓ
   const handleOpenMovie = async (item) => {
     if (!item.movie_id) return;
 
+    // Tạo data tạm từ schedule để mở popup ngay
+    const tempData = {
+      id: item.movie_id,
+      title: item.title,
+      poster: item.poster,
+      season: item.season,
+      show_at: item.show_at || null,
+      schedule_id: item.id,
+      // Placeholder
+      tags: [],
+      custom_links: [],
+      seasons: [],
+      overview: '',
+      _loading: true, // 🎯 Đánh dấu đang load
+    };
+
+    // Mở popup ngay với data tạm
+    setSelectedMovie(tempData);
+
+    // Nếu có cache → dùng luôn
+    if (movieCache[item.movie_id]) {
+      const cached = movieCache[item.movie_id];
+      setSelectedMovie({
+        ...cached,
+        title: item.title || cached.title,
+        poster: item.poster || cached.poster,
+        season: item.season || cached.season,
+        show_at: item.show_at || cached.show_at || null,
+        schedule_id: item.id,
+        _loading: false,
+      });
+      return;
+    }
+
+    // Chưa có cache → gọi API và update sau
     try {
       const res = await fetch(`/api/movies/${item.movie_id}`);
       if (!res.ok) return;
@@ -96,8 +144,13 @@ export default function LichChieuPage() {
         season: item.season || fullMovie.season,
         show_at: item.show_at || fullMovie.show_at || null,
         schedule_id: item.id,
+        _loading: false,
       };
 
+      // Lưu vào cache
+      setMovieCache((prev) => ({ ...prev, [item.movie_id]: fullMovie }));
+
+      // Update popup với data đầy đủ
       setSelectedMovie(mergedData);
     } catch (err) {
       console.error('Lỗi mở popup:', err);
@@ -215,6 +268,8 @@ export default function LichChieuPage() {
                 <div
                   key={`${item.id}-${i}`}
                   onClick={() => handleOpenMovie(item)}
+                  onMouseEnter={() => preloadMovie(item.movie_id)} // 🎯 PRELOAD
+                  onTouchStart={() => preloadMovie(item.movie_id)} // 🎯 PRELOAD MOBILE
                   className={`block anim-fadeInUp group ${
                     isAvailable ? 'cursor-pointer' : 'cursor-default'
                   }`}
