@@ -151,7 +151,6 @@ export default function MovieModal({ movie, onClose }) {
               </div>
             )}
 
-            {/* ⏰ THÔNG BÁO CHỜ GIỜ */}
             {isTimeLocked && (
               <div className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 anim-fadeIn">
                 <div className="flex items-start gap-2">
@@ -243,7 +242,6 @@ export default function MovieModal({ movie, onClose }) {
               })}
             </div>
 
-            {/* NÚT XEM CHI TIẾT — CHẶN NẾU CHƯA ĐẾN GIỜ */}
             {isTimeLocked ? (
               <button
                 onClick={() => setShowNotice(true)}
@@ -260,13 +258,13 @@ export default function MovieModal({ movie, onClose }) {
               </Link>
             )}
 
-            {/* DANH SÁCH TẬP */}
-            {movie.seasons?.length > 0 && (
-              <div className="mt-5">
-                <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
-                  DANH SÁCH TẬP ({movie.seasons.length})
-                </h3>
+            {/* 🎯 DANH SÁCH TẬP — LUÔN HIỆN */}
+            <div className="mt-5">
+              <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
+                DANH SÁCH TẬP ({movie.seasons?.length || 0})
+              </h3>
 
+              {movie.seasons?.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2">
                   {movie.seasons.slice(0, 6).map((s, i) => {
                     const isAvailable = !!s.facebook && !isTimeLocked;
@@ -331,17 +329,30 @@ export default function MovieModal({ movie, onClose }) {
                     );
                   })}
                 </div>
+              ) : (
+                <div className="text-center py-6 bg-black/20 rounded-xl border border-white/5">
+                  <div className="text-3xl mb-2 opacity-40">🎞</div>
+                  <p className="text-xs text-slate-500">
+                    Chưa có tập nào.
+                  </p>
+                </div>
+              )}
 
-                {movie.seasons.length > 6 && !isTimeLocked && (
-                  <Link
-                    href={`/movie/${movie.id}`}
-                    className="block text-center text-xs text-amber-400 hover:text-amber-300 mt-3 font-bold transition-colors"
-                  >
-                    + Xem tất cả {movie.seasons.length} tập →
-                  </Link>
-                )}
-              </div>
-            )}
+              {movie.seasons?.length > 6 && !isTimeLocked && (
+                <Link
+                  href={`/movie/${movie.id}`}
+                  className="block text-center text-xs text-amber-400 hover:text-amber-300 mt-3 font-bold transition-colors"
+                >
+                  + Xem tất cả {movie.seasons.length} tập →
+                </Link>
+              )}
+
+              {movie.seasons?.length > 6 && isTimeLocked && (
+                <div className="text-center text-xs text-slate-500 mt-3">
+                  Còn {movie.seasons.length - 6} tập khác — đến giờ xem mới hiện
+                </div>
+              )}
+            </div>
 
             <div className="mt-4 pt-3 border-t border-white/5 text-center">
               <span className="text-[10px] text-slate-500">
@@ -355,7 +366,6 @@ export default function MovieModal({ movie, onClose }) {
         </div>
       </div>
 
-      {/* MODAL THÔNG BÁO CHƯA ĐẾN GIỜ */}
       {showNotice && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm anim-fadeIn"
