@@ -3,6 +3,51 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MovieModal from '@/components/MovieModal';
 
+// 📅 TỰ ĐỘNG TÍNH NGÀY TỪ "DAY"
+const getDateFromDay = (day) => {
+  const today = new Date();
+  let targetDate = new Date(today);
+  const dayUpper = day.toUpperCase();
+
+  if (dayUpper === 'HÔM NAY') {
+    targetDate = today;
+  } else if (dayUpper === 'NGÀY MAI') {
+    targetDate.setDate(today.getDate() + 1);
+  } else if (dayUpper === 'THỨ 2') {
+    const currentDay = today.getDay();
+    const daysUntil = (1 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 3') {
+    const currentDay = today.getDay();
+    const daysUntil = (2 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 4') {
+    const currentDay = today.getDay();
+    const daysUntil = (3 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 5') {
+    const currentDay = today.getDay();
+    const daysUntil = (4 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 6') {
+    const currentDay = today.getDay();
+    const daysUntil = (5 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'THỨ 7') {
+    const currentDay = today.getDay();
+    const daysUntil = (6 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  } else if (dayUpper === 'CHỦ NHẬT') {
+    const currentDay = today.getDay();
+    const daysUntil = (0 - currentDay + 7) % 7;
+    targetDate.setDate(today.getDate() + (daysUntil || 7));
+  }
+
+  const d = String(targetDate.getDate()).padStart(2, '0');
+  const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+  return `${d}/${m}`;
+};
+
 export default function LichChieuPage() {
   const [schedule, setSchedule] = useState([]);
   const [movies, setMovies] = useState([]);
@@ -23,14 +68,9 @@ export default function LichChieuPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  // Group theo ngày
   const grouped = schedule.reduce((acc, item) => {
     if (!acc[item.day]) {
-      acc[item.day] = {
-        day: item.day,
-        date: item.date,
-        items: [],
-      };
+      acc[item.day] = { day: item.day, items: [] };
     }
     acc[item.day].items.push(item);
     return acc;
@@ -38,29 +78,34 @@ export default function LichChieuPage() {
 
   const days = Object.keys(grouped);
 
-  // 🎯 Tìm movie data từ movies array theo movie_id
-  const getMovieData = (item) => {
-    if (!item.movie_id) return item;
-    const movie = movies.find((m) => m.id === item.movie_id);
-    if (!movie) return item;
+  // 🎯 MỞ POPUP — GỌI API ĐỂ LẤY FULL DATA CÓ SEASONS
+  const handleOpenMovie = async (item) => {
+    if (!item.movie_id) return;
 
-    // Merge schedule + movie
-    return {
-      ...movie,
-      // Ghi đè từ schedule (nếu có)
-      title: item.title || movie.title,
-      poster: item.poster || movie.poster,
-      season: item.season || movie.season,
-      show_at: item.show_at || null,
-      schedule_id: item.id,
-    };
+    try {
+      const res = await fetch(`/api/movies/${item.movie_id}`);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const fullMovie = data.movie;
+
+      const mergedData = {
+        ...fullMovie,
+        title: item.title || fullMovie.title,
+        poster: item.poster || fullMovie.poster,
+        season: item.season || fullMovie.season,
+        show_at: item.show_at || fullMovie.show_at || null,
+        schedule_id: item.id,
+      };
+
+      setSelectedMovie(mergedData);
+    } catch (err) {
+      console.error('Lỗi mở popup:', err);
+    }
   };
 
-  // Lấy danh sách items theo ngày
   const getItems = () => {
-    if (activeDay === 'Tất cả') {
-      return schedule;
-    }
+    if (activeDay === 'Tất cả') return schedule;
     return grouped[activeDay]?.items || [];
   };
 
@@ -84,7 +129,6 @@ export default function LichChieuPage() {
 
   return (
     <div className="px-4 py-4 md:px-6 md:py-6 max-w-6xl mx-auto">
-      {/* HEADER */}
       <div className="mb-5 anim-fadeInUp d-1">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-2xl">📅</span>
@@ -107,10 +151,8 @@ export default function LichChieuPage() {
         </div>
       )}
 
-      {/* TABS NGÀY */}
       {days.length > 0 && (
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-5 anim-fadeInUp d-2">
-          {/* TAB TẤT CẢ */}
           <button
             onClick={() => setActiveDay('Tất cả')}
             className={`px-4 py-2.5 rounded-2xl whitespace-nowrap btn-tap text-center shrink-0 transition-all border ${
@@ -124,10 +166,8 @@ export default function LichChieuPage() {
             </div>
           </button>
 
-          {/* CÁC NGÀY */}
           {days.map((d) => {
             const active = activeDay === d;
-            const dayData = grouped[d];
             const isToday = d.toUpperCase().includes('HÔM NAY');
             const isTomorrow = d.toUpperCase().includes('NGÀY MAI');
 
@@ -145,7 +185,7 @@ export default function LichChieuPage() {
                   {isToday && '🔴'} {isTomorrow && '🟡'} {d}
                 </div>
                 <div className="text-xs font-bold mt-0.5">
-                  {dayData.date}
+                  {getDateFromDay(d)}
                 </div>
               </button>
             );
@@ -153,46 +193,38 @@ export default function LichChieuPage() {
         </div>
       )}
 
-      {/* DANH SÁCH PHIM */}
       {items.length > 0 && (
         <div className="anim-fadeInUp d-3">
-          {/* TIÊU ĐỀ NGÀY */}
           {activeDay !== 'Tất cả' && grouped[activeDay] && (
             <div className="flex items-center gap-3 mb-4">
               <span className="text-sm font-bold text-amber-400 flex items-center gap-1.5">
                 ⏰ {activeDay}
               </span>
               <span className="text-xs text-slate-500">
-                {grouped[activeDay].date} · {items.length} phim
+                {getDateFromDay(activeDay)} · {items.length} phim
               </span>
             </div>
           )}
 
-          {/* GRID PHIM */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {items.map((item, i) => {
-              const movieData = getMovieData(item);
-              const isAvailable = !!movieData.movie_id;
+              const movieData = movies.find((m) => m.id === item.movie_id);
+              const isAvailable = !!item.movie_id;
 
               return (
                 <div
                   key={`${item.id}-${i}`}
-                  onClick={() => {
-                    if (isAvailable) {
-                      setSelectedMovie(movieData);
-                    }
-                  }}
+                  onClick={() => handleOpenMovie(item)}
                   className={`block anim-fadeInUp group ${
                     isAvailable ? 'cursor-pointer' : 'cursor-default'
                   }`}
                   style={{ animationDelay: `${i * 0.04}s` }}
                 >
-                  {/* ẢNH NGANG 16:9 */}
                   <div className="relative aspect-[16/9] rounded-xl overflow-hidden card-bg">
-                    {movieData.poster ? (
+                    {item.poster ? (
                       <img
-                        src={movieData.poster}
-                        alt={movieData.title}
+                        src={item.poster}
+                        alt={item.title}
                         loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
@@ -202,55 +234,45 @@ export default function LichChieuPage() {
                       </div>
                     )}
 
-                    {/* Gradient overlay */}
                     <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
 
-                    {/* Badge Mùa */}
-                    {movieData.season && (
+                    {item.season && (
                       <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur text-[10px] font-bold text-amber-300 border border-amber-400/30">
-                        {movieData.season}
+                        {item.season}
                       </div>
                     )}
 
-                    {/* Badge Ngày */}
                     {activeDay === 'Tất cả' && (
                       <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[9px] font-bold shadow-lg">
-                        {item.day}
+                        {item.day} · {getDateFromDay(item.day)}
                       </div>
                     )}
 
-                    {/* Badge show_at (nếu có) */}
-                    {movieData.show_at &&
-                      new Date(movieData.show_at) > new Date() && (
-                        <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur text-[9px] font-bold text-white flex items-center gap-1">
-                          ⏰{' '}
-                          {new Date(movieData.show_at).toLocaleString(
-                            'vi-VN',
-                            {
-                              day: '2-digit',
-                              month: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            }
-                          )}
-                        </div>
-                      )}
+                    {item.show_at && new Date(item.show_at) > new Date() && (
+                      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur text-[9px] font-bold text-white flex items-center gap-1">
+                        ⏰{' '}
+                        {new Date(item.show_at).toLocaleString('vi-VN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    )}
 
-                    {/* Status */}
-                    {movieData.status && (
+                    {item.status && (
                       <div className="absolute bottom-2 left-2 flex items-center gap-1 text-[10px] text-emerald-400 font-bold">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        {movieData.status}
+                        {item.status}
                       </div>
                     )}
                   </div>
 
-                  {/* THÔNG TIN PHIM */}
                   <div className="mt-2">
                     <h3 className="text-[12px] font-bold text-white line-clamp-2 leading-tight group-hover:text-rose-300 transition-colors">
-                      {movieData.title}
+                      {item.title}
                     </h3>
-                    {movieData.title_goc && (
+                    {movieData?.title_goc && (
                       <p className="text-[9px] text-slate-500 line-clamp-1 mt-0.5">
                         {movieData.title_goc}
                       </p>
@@ -263,7 +285,6 @@ export default function LichChieuPage() {
         </div>
       )}
 
-      {/* MODAL */}
       {selectedMovie && (
         <MovieModal
           movie={selectedMovie}
