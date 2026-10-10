@@ -51,6 +51,9 @@ export default function MovieModal({ movie, onClose }) {
       })
     : '';
 
+  // 🎯 CHECK ĐANG LOAD
+  const isLoading = movie._loading === true;
+
   const toggleLike = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -170,20 +173,29 @@ export default function MovieModal({ movie, onClose }) {
               </div>
             )}
 
-            {overviewText && (
-              <div className="mb-3">
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  {displayOverview}
-                </p>
-                {isLongOverview && (
-                  <button
-                    onClick={() => setShowFullOverview(!showFullOverview)}
-                    className="text-xs font-bold text-amber-400 hover:text-amber-300 mt-1 transition-colors"
-                  >
-                    {showFullOverview ? 'Thu gọn ↑' : 'Xem chi tiết ↓'}
-                  </button>
-                )}
+            {/* 🎯 OVERVIEW — SKELETON KHI LOADING */}
+            {isLoading ? (
+              <div className="mb-3 space-y-2">
+                <div className="h-3 bg-[#151d2e] rounded animate-pulse" />
+                <div className="h-3 bg-[#151d2e] rounded animate-pulse w-5/6" />
+                <div className="h-3 bg-[#151d2e] rounded animate-pulse w-4/6" />
               </div>
+            ) : (
+              overviewText && (
+                <div className="mb-3">
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    {displayOverview}
+                  </p>
+                  {isLongOverview && (
+                    <button
+                      onClick={() => setShowFullOverview(!showFullOverview)}
+                      className="text-xs font-bold text-amber-400 hover:text-amber-300 mt-1 transition-colors"
+                    >
+                      {showFullOverview ? 'Thu gọn ↑' : 'Xem chi tiết ↓'}
+                    </button>
+                  )}
+                </div>
+              )
             )}
 
             <div className="flex gap-1.5 mt-4 flex-wrap sm:flex-nowrap">
@@ -258,101 +270,124 @@ export default function MovieModal({ movie, onClose }) {
               </Link>
             )}
 
-            {/* 🎯 DANH SÁCH TẬP — LUÔN HIỆN */}
-            <div className="mt-5">
-              <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
-                DANH SÁCH TẬP ({movie.seasons?.length || 0})
-              </h3>
-
-              {movie.seasons?.length > 0 ? (
+            {/* 🎯 DANH SÁCH TẬP — LOADING SKELETON */}
+            {isLoading ? (
+              <div className="mt-5">
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
+                  DANH SÁCH TẬP
+                </h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {movie.seasons.slice(0, 6).map((s, i) => {
-                    const isAvailable = !!s.facebook && !isTimeLocked;
-                    const isLocked = isTimeLocked && !!s.facebook;
-                    const Wrapper = isAvailable ? 'a' : 'div';
-                    const wrapperProps = isAvailable
-                      ? {
-                          href: s.facebook,
-                          target: '_blank',
-                          rel: 'noopener noreferrer',
-                        }
-                      : {};
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="rounded-xl p-2.5 flex items-center gap-2 bg-[#151d2e] border border-[#1e293b]"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[#1e293b] animate-pulse" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-2 bg-[#1e293b] rounded animate-pulse" />
+                        <div className="h-2 bg-[#1e293b] rounded animate-pulse w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5">
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
+                  DANH SÁCH TẬP ({movie.seasons?.length || 0})
+                </h3>
 
-                    return (
-                      <Wrapper
-                        key={i}
-                        {...wrapperProps}
-                        className={`card-bg rounded-xl p-2.5 flex items-center gap-2 transition-all duration-300 ${
-                          isAvailable
-                            ? 'cursor-pointer hover:border-rose-400/50 hover:bg-[#1a2540] hover:-translate-y-0.5 active:scale-[0.97] group'
-                            : isLocked
-                            ? 'opacity-70 cursor-not-allowed'
-                            : 'opacity-60 cursor-not-allowed'
-                        }`}
-                      >
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 transition-colors ${
+                {movie.seasons?.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {movie.seasons.slice(0, 6).map((s, i) => {
+                      const isAvailable = !!s.facebook && !isTimeLocked;
+                      const isLocked = isTimeLocked && !!s.facebook;
+                      const Wrapper = isAvailable ? 'a' : 'div';
+                      const wrapperProps = isAvailable
+                        ? {
+                            href: s.facebook,
+                            target: '_blank',
+                            rel: 'noopener noreferrer',
+                          }
+                        : {};
+
+                      return (
+                        <Wrapper
+                          key={i}
+                          {...wrapperProps}
+                          className={`card-bg rounded-xl p-2.5 flex items-center gap-2 transition-all duration-300 ${
                             isAvailable
-                              ? 'bg-gradient-to-br from-rose-400/30 to-orange-500/30 border border-rose-400/50 group-hover:from-rose-400/50 group-hover:to-orange-500/50'
+                              ? 'cursor-pointer hover:border-rose-400/50 hover:bg-[#1a2540] hover:-translate-y-0.5 active:scale-[0.97] group'
                               : isLocked
-                              ? 'bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-500/30'
-                              : 'bg-gradient-to-br from-slate-400/10 to-slate-500/10 border border-slate-500/20'
+                              ? 'opacity-70 cursor-not-allowed'
+                              : 'opacity-60 cursor-not-allowed'
                           }`}
                         >
-                          {isAvailable ? '▶' : isLocked ? '🔒' : '🎞'}
-                        </div>
-                        <div className="flex-1 min-w-0">
                           <div
-                            className={`text-[11px] font-bold truncate ${
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 transition-colors ${
                               isAvailable
-                                ? 'text-white group-hover:text-rose-300 transition-colors'
-                                : 'text-slate-400'
+                                ? 'bg-gradient-to-br from-rose-400/30 to-orange-500/30 border border-rose-400/50 group-hover:from-rose-400/50 group-hover:to-orange-500/50'
+                                : isLocked
+                                ? 'bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-500/30'
+                                : 'bg-gradient-to-br from-slate-400/10 to-slate-500/10 border border-slate-500/20'
                             }`}
                           >
-                            {s.name}
+                            {isAvailable ? '▶' : isLocked ? '🔒' : '🎞'}
                           </div>
-                          <div className="text-[9px] text-slate-500 truncate">
-                            {isAvailable ? (
-                              <span className="text-emerald-400 font-bold">
-                                ● Có thể xem
-                              </span>
-                            ) : isLocked ? (
-                              <span className="text-amber-400 font-bold">
-                                ⏰ Chờ giờ xem
-                              </span>
-                            ) : (
-                              '⏱ Đang cập nhật'
-                            )}
+                          <div className="flex-1 min-w-0">
+                            <div
+                              className={`text-[11px] font-bold truncate ${
+                                isAvailable
+                                  ? 'text-white group-hover:text-rose-300 transition-colors'
+                                  : 'text-slate-400'
+                              }`}
+                            >
+                              {s.name}
+                            </div>
+                            <div className="text-[9px] text-slate-500 truncate">
+                              {isAvailable ? (
+                                <span className="text-emerald-400 font-bold">
+                                  ● Có thể xem
+                                </span>
+                              ) : isLocked ? (
+                                <span className="text-amber-400 font-bold">
+                                  ⏰ Chờ giờ xem
+                                </span>
+                              ) : (
+                                '⏱ Đang cập nhật'
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Wrapper>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-6 bg-black/20 rounded-xl border border-white/5">
-                  <div className="text-3xl mb-2 opacity-40">🎞</div>
-                  <p className="text-xs text-slate-500">
-                    Chưa có tập nào.
-                  </p>
-                </div>
-              )}
+                        </Wrapper>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 bg-black/20 rounded-xl border border-white/5">
+                    <div className="text-3xl mb-2 opacity-40">🎞</div>
+                    <p className="text-xs text-slate-500">
+                      Chưa có tập nào.
+                    </p>
+                  </div>
+                )}
 
-              {movie.seasons?.length > 6 && !isTimeLocked && (
-                <Link
-                  href={`/movie/${movie.id}`}
-                  className="block text-center text-xs text-amber-400 hover:text-amber-300 mt-3 font-bold transition-colors"
-                >
-                  + Xem tất cả {movie.seasons.length} tập →
-                </Link>
-              )}
+                {movie.seasons?.length > 6 && !isTimeLocked && (
+                  <Link
+                    href={`/movie/${movie.id}`}
+                    className="block text-center text-xs text-amber-400 hover:text-amber-300 mt-3 font-bold transition-colors"
+                  >
+                    + Xem tất cả {movie.seasons.length} tập →
+                  </Link>
+                )}
 
-              {movie.seasons?.length > 6 && isTimeLocked && (
-                <div className="text-center text-xs text-slate-500 mt-3">
-                  Còn {movie.seasons.length - 6} tập khác — đến giờ xem mới hiện
-                </div>
-              )}
-            </div>
+                {movie.seasons?.length > 6 && isTimeLocked && (
+                  <div className="text-center text-xs text-slate-500 mt-3">
+                    Còn {movie.seasons.length - 6} tập khác — đến giờ xem mới
+                    hiện
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="mt-4 pt-3 border-t border-white/5 text-center">
               <span className="text-[10px] text-slate-500">
