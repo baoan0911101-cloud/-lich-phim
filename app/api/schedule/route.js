@@ -3,30 +3,27 @@ import { query } from '@/lib/db';
 // GET: lấy tất cả lịch chiếu (tự động xoá lịch cũ)
 export async function GET() {
   try {
-    // 🎯 BƯỚC 1: Xoá các lịch đã qua show_at
+    // Xoá lịch đã qua show_at
     await query(
       `DELETE FROM schedule 
        WHERE show_at IS NOT NULL 
          AND show_at <= NOW()`
     );
 
-    // 🎯 BƯỚC 2: Xoá các lịch "HÔM NAY" từ hôm qua
-    // (lịch có day = HÔM NAY nhưng created_at < đầu ngày hôm nay)
+    // Xoá lịch "HÔM NAY" từ hôm qua
     await query(
       `DELETE FROM schedule 
        WHERE day = 'HÔM NAY'
          AND DATE(created_at) < CURRENT_DATE`
     );
 
-    // 🎯 BƯỚC 3: Xoá lịch NGÀY MAI đã qua
-    // (lịch có day = NGÀY MAI nhưng created_at < hôm qua)
+    // Xoá lịch "NGÀY MAI" đã qua
     await query(
       `DELETE FROM schedule 
        WHERE day = 'NGÀY MAI'
          AND DATE(created_at) < CURRENT_DATE - INTERVAL '1 day'`
     );
 
-    // 🎯 BƯỚC 4: Lấy danh sách còn lại
     const result = await query(
       'SELECT * FROM schedule ORDER BY day, sort_order, id'
     );
@@ -36,10 +33,10 @@ export async function GET() {
   }
 }
 
-// POST: thêm lịch chiếu mới
+// POST: thêm lịch chiếu mới (CÓ LƯU TẬP)
 export async function POST(request) {
   try {
-    const { password, item } = await request.json();
+    const { password, item, seasons } = await request.json();
 
     if (password !== process.env.ADMIN_PASSWORD) {
       return Response.json({ error: 'Sai mật khẩu' }, { status: 401 });
@@ -49,6 +46,7 @@ export async function POST(request) {
       return Response.json({ error: 'Thiếu thông tin' }, { status: 400 });
     }
 
+    // 🎯 TÍNH sort_order MỚI (không bị trùng)
     const maxOrder = await query(
       'SELECT COALESCE(MAX(sort_order), 0) as max_order FROM schedule WHERE day = $1',
       [item.day]
@@ -56,6 +54,54 @@ export async function POST(request) {
 
     const sortOrder = (maxOrder.rows[0]?.max_order || 0) + 1;
 
+    // 🎯 NẾU CÓ movie_id VÀ CHƯA CÓ PHIM → TẠO PHIM MỚI
+    if (item.movie_id) {
+      const existMovie = await query(
+        'SELECT id FROM movies WHERE id = $1',
+        [item.movie_id]
+      );
+
+      if (existMovie.rows.length === 0) {
+        // Tạo phim mới
+        await query(
+          `INSERT INTO movies (id, title, title_goc, poster, season, tags, total_duration, overview, custom_links, status, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+          [
+            item.movie_id,
+            item.title,
+            item.title_goc || null,
+            item.poster || null,
+            item.season || null,
+            item.tags || [],
+            item.total_duration || null,
+            item.overview || null,
+            JSON.stringify(item.custom_links || []),
+            'HÔM NAY',
+          ]
+        );
+
+        // 🎯 LƯU TẬP PHIM (seasons)
+        if (seasons?.length) {
+          for (let i = 0; i < seasons.length; i++) {
+            const s = seasons[i];
+            await query(
+              `INSERT INTO seasons (movie_id, name, duration, facebook, youtube, sort_order)
+               VALUES ($1, $2, $3, $4, $5, $6)`,
+              [
+                item.movie_id,
+                s.name || `Phần ${i + 1}`,
+                s.duration || null,
+                s.facebook || null,
+                s.youtube || null,
+                i,
+              ]
+            );
+          }
+        }
+      }
+    }
+
+    // 🎯 INSERT LỊCH CHIẾU
     const result = await query(
       `INSERT INTO schedule (day, date, movie_id, title, poster, season, status, show_at, sort_order)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -79,7 +125,7 @@ export async function POST(request) {
   }
 }
 
-// DELETE: xoá tất cả (dùng cho admin reset)
+// DELETE: xoá tất cả
 export async function DELETE(request) {
   try {
     const { password } = await request.json();
