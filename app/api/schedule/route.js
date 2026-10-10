@@ -1,6 +1,5 @@
 import { query } from '@/lib/db';
 
-// GET: lấy tất cả lịch chiếu (tự động xoá lịch cũ)
 export async function GET() {
   try {
     // Xoá lịch đã qua show_at
@@ -33,7 +32,6 @@ export async function GET() {
   }
 }
 
-// POST: thêm lịch chiếu mới (CÓ LƯU TẬP)
 export async function POST(request) {
   try {
     const { password, item, seasons } = await request.json();
@@ -46,7 +44,7 @@ export async function POST(request) {
       return Response.json({ error: 'Thiếu thông tin' }, { status: 400 });
     }
 
-    // 🎯 TÍNH sort_order MỚI (không bị trùng)
+    // 🎯 TÍNH sort_order MỚI
     const maxOrder = await query(
       'SELECT COALESCE(MAX(sort_order), 0) as max_order FROM schedule WHERE day = $1',
       [item.day]
@@ -54,7 +52,7 @@ export async function POST(request) {
 
     const sortOrder = (maxOrder.rows[0]?.max_order || 0) + 1;
 
-    // 🎯 NẾU CÓ movie_id VÀ CHƯA CÓ PHIM → TẠO PHIM MỚI
+    // 🎯 NẾU CÓ movie_id VÀ CHƯA CÓ PHIM → TẠO PHIM MỚI + TẬP
     if (item.movie_id) {
       const existMovie = await query(
         'SELECT id FROM movies WHERE id = $1',
@@ -125,7 +123,6 @@ export async function POST(request) {
   }
 }
 
-// DELETE: xoá tất cả
 export async function DELETE(request) {
   try {
     const { password } = await request.json();
