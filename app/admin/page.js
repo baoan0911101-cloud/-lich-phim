@@ -532,6 +532,7 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  // 🎯 SỬA: GỬI TẤT CẢ QUA API /api/schedule
   const handleNewMovieSchedule = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -541,37 +542,11 @@ export default function AdminPage() {
       (l) => l.name.trim() && l.url.trim()
     );
 
-    const movieData = {
-      title: movie.title,
-      title_goc: movie.title_goc,
-      poster: movie.poster,
-      season: movie.season,
-      tags: movie.tags.split(',').map((t) => t.trim()).filter(Boolean),
-      total_duration: movie.duration,
-      overview: movie.overview,
-      custom_links: validLinks,
-      seasons,
-    };
-
     try {
       const newId = slugify(movie.title);
 
-      const movieRes = await fetch('/api/movies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          password,
-          movie: { id: newId, ...movieData },
-        }),
-      });
-      const movieData_res = await movieRes.json();
-
-      if (!movieData_res.success) {
-        setMsg('❌ Lỗi tạo phim: ' + (movieData_res.error || 'Không rõ'));
-        setLoading(false);
-        return;
-      }
-
+      // 🎯 GỬI TẤT CẢ QUA API /api/schedule
+      // API sẽ tự tạo phim + tập + lịch
       const scheduleRes = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -581,9 +556,15 @@ export default function AdminPage() {
             ...scheduleForm,
             movie_id: newId,
             title: movie.title,
+            title_goc: movie.title_goc,
             poster: movie.poster,
             season: movie.season,
+            tags: movie.tags.split(',').map((t) => t.trim()).filter(Boolean),
+            total_duration: movie.duration,
+            overview: movie.overview,
+            custom_links: validLinks,
           },
+          seasons: seasons, // 🎯 GỬI TẬP
         }),
       });
       const scheduleData = await scheduleRes.json();
@@ -597,7 +578,7 @@ export default function AdminPage() {
           loadSchedule();
         }, 500);
       } else {
-        setMsg('⚠️ Đã tạo phim nhưng lỗi lịch: ' + (scheduleData.error || ''));
+        setMsg('❌ Lỗi: ' + (scheduleData.error || 'Không rõ'));
       }
     } catch (err) {
       setMsg('❌ Lỗi: ' + err.message);
@@ -632,7 +613,6 @@ export default function AdminPage() {
           setToast('✅ Đã xoá lịch chiếu');
         }
         setTimeout(() => setToast(''), 3000);
-        // Load lại cả lịch và phim
         loadSchedule();
         loadMovies();
       }
