@@ -1,8 +1,32 @@
 import { query } from '@/lib/db';
 
-// GET: lấy tất cả lịch chiếu
+// GET: lấy tất cả lịch chiếu (tự động xoá lịch cũ)
 export async function GET() {
   try {
+    // 🎯 BƯỚC 1: Xoá các lịch đã qua show_at
+    await query(
+      `DELETE FROM schedule 
+       WHERE show_at IS NOT NULL 
+         AND show_at <= NOW()`
+    );
+
+    // 🎯 BƯỚC 2: Xoá các lịch "HÔM NAY" từ hôm qua
+    // (lịch có day = HÔM NAY nhưng created_at < đầu ngày hôm nay)
+    await query(
+      `DELETE FROM schedule 
+       WHERE day = 'HÔM NAY'
+         AND DATE(created_at) < CURRENT_DATE`
+    );
+
+    // 🎯 BƯỚC 3: Xoá lịch NGÀY MAI đã qua
+    // (lịch có day = NGÀY MAI nhưng created_at < hôm qua)
+    await query(
+      `DELETE FROM schedule 
+       WHERE day = 'NGÀY MAI'
+         AND DATE(created_at) < CURRENT_DATE - INTERVAL '1 day'`
+    );
+
+    // 🎯 BƯỚC 4: Lấy danh sách còn lại
     const result = await query(
       'SELECT * FROM schedule ORDER BY day, sort_order, id'
     );
