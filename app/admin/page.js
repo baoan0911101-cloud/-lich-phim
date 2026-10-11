@@ -81,6 +81,109 @@ const calculateDate = (day) => {
   return `${d}/${m}`;
 };
 
+// ⏰ COMPONENT CHỌN GIỜ 24H
+function DateTimePicker24h({ value, onChange, input, label }) {
+  const datePart = value ? value.split('T')[0] : '';
+  const hourPart = value ? value.split('T')[1]?.split(':')[0] || '00' : '00';
+  const minutePart = value ? value.split('T')[1]?.split(':')[1] || '00' : '00';
+
+  const handleDateChange = (newDate) => {
+    if (!newDate) {
+      onChange('');
+      return;
+    }
+    onChange(`${newDate}T${hourPart}:${minutePart}`);
+  };
+
+  const handleHourChange = (newHour) => {
+    if (!datePart) {
+      alert('Vui lòng chọn ngày trước!');
+      return;
+    }
+    onChange(`${datePart}T${newHour}:${minutePart}`);
+  };
+
+  const handleMinuteChange = (newMinute) => {
+    if (!datePart) {
+      alert('Vui lòng chọn ngày trước!');
+      return;
+    }
+    onChange(`${datePart}T${hourPart}:${newMinute}`);
+  };
+
+  return (
+    <div>
+      <label className={label}>⏰ Giờ xem được (24h)</label>
+
+      {/* Ô chọn NGÀY */}
+      <input
+        type="date"
+        value={datePart}
+        onChange={(e) => handleDateChange(e.target.value)}
+        className={input + ' mb-2'}
+      />
+
+      {/* DROPDOWN GIỜ + PHÚT */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] text-slate-500 font-bold mb-1 block">
+            Giờ (00-23)
+          </label>
+          <select
+            value={hourPart}
+            onChange={(e) => handleHourChange(e.target.value)}
+            className={input}
+          >
+            {Array.from({ length: 24 }, (_, i) => {
+              const h = String(i).padStart(2, '0');
+              return (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-[10px] text-slate-500 font-bold mb-1 block">
+            Phút
+          </label>
+          <select
+            value={minutePart}
+            onChange={(e) => handleMinuteChange(e.target.value)}
+            className={input}
+          >
+            {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(
+              (m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+      </div>
+
+      {/* PREVIEW */}
+      {value && (
+        <div className="mt-2 p-2 rounded-lg bg-sky-500/10 border border-sky-500/30">
+          <p className="text-[10px] text-sky-300 font-bold">
+            ⏰ Sẽ hiện lúc:{' '}
+            <span className="text-white">
+              {datePart.split('-').reverse().join('/')} — {hourPart}:{minutePart}
+            </span>
+          </p>
+        </div>
+      )}
+
+      <p className="text-[10px] text-slate-500 mt-1">
+        Chọn ngày → chọn giờ + phút (24h)
+      </p>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [unlocked, setUnlocked] = useState(false);
@@ -532,7 +635,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  // 🎯 SỬA: GỬI TẤT CẢ QUA API /api/schedule
   const handleNewMovieSchedule = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -545,8 +647,6 @@ export default function AdminPage() {
     try {
       const newId = slugify(movie.title);
 
-      // 🎯 GỬI TẤT CẢ QUA API /api/schedule
-      // API sẽ tự tạo phim + tập + lịch
       const scheduleRes = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -564,7 +664,7 @@ export default function AdminPage() {
             overview: movie.overview,
             custom_links: validLinks,
           },
-          seasons: seasons, // 🎯 GỬI TẬP
+          seasons: seasons,
         }),
       });
       const scheduleData = await scheduleRes.json();
@@ -587,7 +687,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  // 🎯 XOÁ LỊCH CHIẾU + XOÁ PHIM (nếu có)
   const handleScheduleDelete = async (id) => {
     const item = scheduleItems.find((s) => s.id === id);
     const hasMovie = item?.movie_id;
@@ -929,51 +1028,15 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div>
-                      <label className={label}>⏰ Giờ xem được</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {/* Ô chọn NGÀY */}
-                        <input
-                          type="date"
-                          value={scheduleForm.show_at ? scheduleForm.show_at.split('T')[0] : ''}
-                          onChange={(e) => {
-                            const datePart = e.target.value;
-                            const timePart = scheduleForm.show_at
-                              ? scheduleForm.show_at.split('T')[1] || '00:00'
-                              : '00:00';
-                            setScheduleForm({
-                              ...scheduleForm,
-                              show_at: datePart ? `${datePart}T${timePart}` : '',
-                            });
-                          }}
-                          className={input}
-                        />
-
-                        {/* Ô chọn GIỜ 24H */}
-                        <input
-                          type="time"
-                          value={
-                            scheduleForm.show_at
-                              ? scheduleForm.show_at.split('T')[1] || '00:00'
-                              : ''
-                          }
-                          onChange={(e) => {
-                            const timePart = e.target.value;
-                            const datePart = scheduleForm.show_at
-                              ? scheduleForm.show_at.split('T')[0] || ''
-                              : new Date().toISOString().split('T')[0];
-                            setScheduleForm({
-                              ...scheduleForm,
-                              show_at: datePart ? `${datePart}T${timePart}` : '',
-                            });
-                          }}
-                          className={input}
-                        />
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-1">
-                        Ngày + Giờ (24h). VD: 10/10/2026 + 20:00
-                      </p>
-                    </div>
+                  {/* ⏰ DROPDOWN 24H */}
+                  <DateTimePicker24h
+                    value={scheduleForm.show_at}
+                    onChange={(val) =>
+                      setScheduleForm({ ...scheduleForm, show_at: val })
+                    }
+                    input={input}
+                    label={label}
+                  />
 
                   <button
                     type="submit"
@@ -1050,23 +1113,15 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <div>
-                      <label className={label}>⏰ Giờ xem được</label>
-                      <input
-                        type="datetime-local"
-                        value={scheduleForm.show_at || ''}
-                        onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            show_at: e.target.value,
-                          })
-                        }
-                        className={input}
-                      />
-                      <p className="text-[10px] text-slate-500 mt-1">
-                        Đến giờ này tập phim mới xem được
-                      </p>
-                    </div>
+                    {/* ⏰ DROPDOWN 24H */}
+                    <DateTimePicker24h
+                      value={scheduleForm.show_at}
+                      onChange={(val) =>
+                        setScheduleForm({ ...scheduleForm, show_at: val })
+                      }
+                      input={input}
+                      label={label}
+                    />
 
                     <div>
                       <label className={label}>Trạng thái</label>
@@ -1183,6 +1238,7 @@ export default function AdminPage() {
                             month: '2-digit',
                             hour: '2-digit',
                             minute: '2-digit',
+                            hour12: false,
                           })}
                         </p>
                       )}
