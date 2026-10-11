@@ -3,6 +3,73 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { formatRelativeDate } from '@/lib/formatDate';
 
+// 🎯 HÀM PARSE GIỜ TỪ DB (giờ VN, không convert timezone)
+const parseShowAt = (showAt) => {
+  if (!showAt) return null;
+
+  const dateStr = showAt.toString();
+
+  // Trường hợp 1: PostgreSQL trả về ISO string "2026-10-11T12:25:00.000Z"
+  // → Cắt bỏ Z, .000 để lấy giờ "gốc" (đã là giờ VN khi lưu)
+  if (dateStr.includes('T')) {
+    const cleanStr = dateStr.replace('Z', '').replace(/\.\d{3}/, '');
+    const [datePart, timePart] = cleanStr.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+
+    return {
+      hour,
+      minute,
+      day,
+      month,
+      year,
+      // Tạo Date object ở local time (không convert UTC)
+      date: new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hour),
+        parseInt(minute)
+      ),
+    };
+  }
+
+  // Trường hợp 2: PostgreSQL trả về "2026-10-11 12:25:00"
+  if (dateStr.includes(' ')) {
+    const [datePart, timePart] = dateStr.split(' ');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+
+    return {
+      hour,
+      minute,
+      day,
+      month,
+      year,
+      date: new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hour),
+        parseInt(minute)
+      ),
+    };
+  }
+
+  // Fallback: thử parse bình thường
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+
+  return {
+    hour: String(d.getHours()).padStart(2, '0'),
+    minute: String(d.getMinutes()).padStart(2, '0'),
+    day: String(d.getDate()).padStart(2, '0'),
+    month: String(d.getMonth() + 1).padStart(2, '0'),
+    year: String(d.getFullYear()),
+    date: d,
+  };
+};
+
 export default function MovieModal({ movie, onClose }) {
   const [liked, setLiked] = useState(false);
   const [showFullOverview, setShowFullOverview] = useState(false);
@@ -38,17 +105,15 @@ export default function MovieModal({ movie, onClose }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  // 🎯 CHECK GIỜ XEM
-  const isTimeLocked =
-    movie.show_at && new Date(movie.show_at) > new Date();
-  const showAtText = movie.show_at
-    ? new Date(movie.show_at).toLocaleString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+  // 🎯 CHECK GIỜ XEM — Dùng hàm parse (không lệch timezone)
+  const showAtInfo = parseShowAt(movie.show_at);
+
+  const isTimeLocked = showAtInfo
+    ? showAtInfo.date > new Date()
+    : false;
+
+  const showAtText = showAtInfo
+    ? `${showAtInfo.hour}:${showAtInfo.minute} ${showAtInfo.day}/${showAtInfo.month}/${showAtInfo.year}`
     : '';
 
   // 🎯 CHECK ĐANG LOAD
