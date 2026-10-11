@@ -9,7 +9,6 @@ const parseShowAt = (showAt) => {
 
   const dateStr = showAt.toString();
 
-  // Trường hợp 1: PostgreSQL trả về ISO string "2026-10-11T12:25:00.000Z"
   if (dateStr.includes('T')) {
     const cleanStr = dateStr.replace('Z', '').replace(/\.\d{3}/, '');
     const [datePart, timePart] = cleanStr.split('T');
@@ -32,7 +31,6 @@ const parseShowAt = (showAt) => {
     };
   }
 
-  // Trường hợp 2: PostgreSQL trả về "2026-10-11 12:25:00"
   if (dateStr.includes(' ')) {
     const [datePart, timePart] = dateStr.split(' ');
     const [year, month, day] = datePart.split('-');
@@ -54,7 +52,6 @@ const parseShowAt = (showAt) => {
     };
   }
 
-  // Fallback
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;
 
@@ -72,6 +69,8 @@ export default function MovieModal({ movie, onClose }) {
   const [liked, setLiked] = useState(false);
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [showNotice, setShowNotice] = useState(false);
+  // 🎯 State cho popup chọn link
+  const [linkPicker, setLinkPicker] = useState(null);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
@@ -97,11 +96,17 @@ export default function MovieModal({ movie, onClose }) {
 
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        if (linkPicker) {
+          setLinkPicker(null);
+        } else {
+          onClose();
+        }
+      }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+  }, [onClose, linkPicker]);
 
   // 🎯 CHECK GIỜ XEM
   const showAtInfo = parseShowAt(movie.show_at);
@@ -110,7 +115,6 @@ export default function MovieModal({ movie, onClose }) {
     ? `${showAtInfo.hour}:${showAtInfo.minute} ${showAtInfo.day}/${showAtInfo.month}/${showAtInfo.year}`
     : '';
 
-  // 🎯 CHECK ĐANG LOAD
   const isLoading = movie._loading === true;
 
   const toggleLike = (e) => {
@@ -232,7 +236,6 @@ export default function MovieModal({ movie, onClose }) {
               </div>
             )}
 
-            {/* 🎯 OVERVIEW — SKELETON KHI LOADING */}
             {isLoading ? (
               <div className="mb-3 space-y-2">
                 <div className="h-3 bg-[#151d2e] rounded animate-pulse" />
@@ -329,7 +332,6 @@ export default function MovieModal({ movie, onClose }) {
               </Link>
             )}
 
-            {/* 🎯 DANH SÁCH TẬP — LOADING SKELETON */}
             {isLoading ? (
               <div className="mt-5">
                 <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-3">
@@ -365,14 +367,34 @@ export default function MovieModal({ movie, onClose }) {
                       const isAvailable = hasAnyLink && !isTimeLocked;
                       const isLocked = isTimeLocked && hasAnyLink;
 
-                      // 🎯 Ưu tiên YouTube > Facebook
-                      const primaryLink = s.youtube || s.facebook;
-                      const Wrapper = isAvailable ? 'a' : 'div';
-                      const wrapperProps = isAvailable
+                      // 🎯 LOGIC MỚI
+                      const hasBoth = hasFb && hasYt;
+                      const singleLink = hasFb ? s.facebook : hasYt ? s.youtube : null;
+
+                      const handleClick = () => {
+                        if (!isAvailable) return;
+
+                        if (hasBoth) {
+                          setLinkPicker({ season: s });
+                        } else if (singleLink) {
+                          window.open(
+                            singleLink,
+                            '_blank',
+                            'noopener,noreferrer'
+                          );
+                        }
+                      };
+
+                      const Wrapper = isAvailable && !hasBoth ? 'a' : 'div';
+                      const wrapperProps = isAvailable && !hasBoth
                         ? {
-                            href: primaryLink,
+                            href: singleLink,
                             target: '_blank',
                             rel: 'noopener noreferrer',
+                          }
+                        : isAvailable && hasBoth
+                        ? {
+                            onClick: handleClick,
                           }
                         : {};
 
@@ -469,6 +491,66 @@ export default function MovieModal({ movie, onClose }) {
           </div>
         </div>
       </div>
+
+      {/* 🎯 POPUP CHỌN LINK */}
+      {linkPicker && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm anim-fadeIn"
+          onClick={(e) => {
+            e.stopPropagation();
+            setLinkPicker(null);
+          }}
+        >
+          <div
+            className="card-bg rounded-2xl p-5 max-w-sm w-full anim-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">🔗</div>
+              <h3 className="text-lg font-black text-white mb-1">
+                Chọn nơi xem
+              </h3>
+              <p className="text-xs text-slate-400 line-clamp-1">
+                {linkPicker.season.name}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {linkPicker.season.facebook && (
+                <a
+                  href={linkPicker.season.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setLinkPicker(null)}
+                  className="block w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-sm flex items-center justify-center gap-2 btn-tap shadow-[0_4px_16px_rgba(59,130,246,0.4)]"
+                >
+                  <span className="text-lg font-black">f</span>
+                  Xem trên Facebook
+                </a>
+              )}
+              {linkPicker.season.youtube && (
+                <a
+                  href={linkPicker.season.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setLinkPicker(null)}
+                  className="block w-full py-3.5 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-sm flex items-center justify-center gap-2 btn-tap shadow-[0_4px_16px_rgba(239,68,68,0.4)]"
+                >
+                  <span className="text-lg font-black">▶</span>
+                  Xem trên YouTube
+                </a>
+              )}
+            </div>
+
+            <button
+              onClick={() => setLinkPicker(null)}
+              className="w-full mt-3 py-2.5 rounded-xl card-bg text-slate-300 font-bold text-sm btn-tap border border-[#1e293b] hover:border-rose-400/50 transition-colors"
+            >
+              Huỷ
+            </button>
+          </div>
+        </div>
+      )}
 
       {showNotice && (
         <div
