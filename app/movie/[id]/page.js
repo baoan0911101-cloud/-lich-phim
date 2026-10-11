@@ -354,7 +354,7 @@ export default function MoviePage() {
                           <span className="text-emerald-400 font-bold">
                             ●{' '}
                             {hasFb && hasYt
-                              ? 'Có YouTube + Facebook'
+                              ? 'Có Facebook + YouTube'
                               : hasFb
                               ? 'Có Facebook'
                               : 'Có YouTube'}
