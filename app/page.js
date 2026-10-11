@@ -232,7 +232,7 @@ export default function HomePage() {
                 onClick={() => setSelectedMovie(featured)}
                 className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden card-hover group card-bg cursor-pointer"
               >
-                <div className="aspect-[4/5] relative">
+                <div className="aspect-[3/4] relative">
                   <img
                     src={featured.poster}
                     alt={featured.title}
