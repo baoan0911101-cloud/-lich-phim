@@ -15,7 +15,7 @@ const LINK_COLORS = [
   { id: 'slate', name: 'Xám', bg: 'bg-slate-500/15', border: 'border-slate-500/40', text: 'text-slate-300' },
 ];
 
-// 🎨 BẢNG ICON CÓ SẴN
+// 🎨 BẢNG ICON
 const ICON_PRESETS = [
   { name: 'Telegram', path: '/icons/telegram.png', color: 'sky' },
   { name: 'Facebook', path: '/icons/facebook.png', color: 'blue' },
@@ -27,7 +27,7 @@ const ICON_PRESETS = [
   { name: 'Snapchat', path: '/icons/snapchat.png', color: 'amber' },
 ];
 
-// 🏷 DANH SÁCH THỂ LOẠI CÓ SẴN
+// 🏷 THỂ LOẠI
 const GENRE_PRESETS = [
   'Hoàn Thành', 'Nữ Chính', 'Nam Chính', 'Tu Tiên', 'Vả mặt',
   'Xuyên Không', 'Hài Hước', 'Tình Cảm', 'Main Có Não', 'Nghịch tập',
@@ -36,7 +36,7 @@ const GENRE_PRESETS = [
   'Học đường', 'Võ hiệp', 'Vô hạn lưu', '3D', '2D',
 ];
 
-// 📅 TỰ ĐỘNG TÍNH NGÀY CỤ THỂ TỪ "DAY"
+// 📅 TÍNH NGÀY
 const calculateDate = (day) => {
   const today = new Date();
   let targetDate = new Date(today);
@@ -114,58 +114,35 @@ function DateTimePicker24h({ value, onChange, input, label }) {
   return (
     <div>
       <label className={label}>⏰ Giờ xem được (24h)</label>
-
-      {/* Ô chọn NGÀY */}
       <input
         type="date"
         value={datePart}
         onChange={(e) => handleDateChange(e.target.value)}
         className={input + ' mb-2'}
       />
-
-      {/* DROPDOWN GIỜ + PHÚT */}
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="text-[10px] text-slate-500 font-bold mb-1 block">
             Giờ (00-23)
           </label>
-          <select
-            value={hourPart}
-            onChange={(e) => handleHourChange(e.target.value)}
-            className={input}
-          >
+          <select value={hourPart} onChange={(e) => handleHourChange(e.target.value)} className={input}>
             {Array.from({ length: 24 }, (_, i) => {
               const h = String(i).padStart(2, '0');
-              return (
-                <option key={h} value={h}>
-                  {h}
-                </option>
-              );
+              return <option key={h} value={h}>{h}</option>;
             })}
           </select>
         </div>
-
         <div>
           <label className="text-[10px] text-slate-500 font-bold mb-1 block">
             Phút
           </label>
-          <select
-            value={minutePart}
-            onChange={(e) => handleMinuteChange(e.target.value)}
-            className={input}
-          >
-            {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(
-              (m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              )
-            )}
+          <select value={minutePart} onChange={(e) => handleMinuteChange(e.target.value)} className={input}>
+            {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
           </select>
         </div>
       </div>
-
-      {/* PREVIEW */}
       {value && (
         <div className="mt-2 p-2 rounded-lg bg-sky-500/10 border border-sky-500/30">
           <p className="text-[10px] text-sky-300 font-bold">
@@ -176,10 +153,6 @@ function DateTimePicker24h({ value, onChange, input, label }) {
           </p>
         </div>
       )}
-
-      <p className="text-[10px] text-slate-500 mt-1">
-        Chọn ngày → chọn giờ + phút (24h)
-      </p>
     </div>
   );
 }
@@ -191,6 +164,8 @@ export default function AdminPage() {
   const [loginMsg, setLoginMsg] = useState('');
   const [tab, setTab] = useState('add');
   const [addMode, setAddMode] = useState('movie');
+  // 🎯 Tab con trong "Sửa"
+  const [editMode, setEditMode] = useState('movie'); // 'movie' | 'schedule'
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
@@ -237,8 +212,20 @@ export default function AdminPage() {
     status: 'Sắp chiếu',
     show_at: '',
   });
-
   const [scheduleMode, setScheduleMode] = useState('existing');
+
+  // 🎯 EDIT SCHEDULE STATE
+  const [editingScheduleId, setEditingScheduleId] = useState(null);
+  const [editScheduleForm, setEditScheduleForm] = useState({
+    day: 'HÔM NAY',
+    date: '',
+    movie_id: '',
+    title: '',
+    poster: '',
+    season: '',
+    status: 'Sắp chiếu',
+    show_at: '',
+  });
 
   const loadMovies = async () => {
     setLoadingMovies(true);
@@ -265,14 +252,13 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (unlocked && (tab === 'manage' || tab === 'edit')) {
+    if (unlocked && (tab === 'manage' || tab === 'edit' || tab === 'add')) {
       loadMovies();
     }
   }, [unlocked, tab]);
 
   useEffect(() => {
-    if (unlocked && tab === 'add') {
-      loadMovies();
+    if (unlocked && (tab === 'add' || tab === 'edit')) {
       loadSchedule();
     }
   }, [unlocked, tab]);
@@ -338,6 +324,21 @@ export default function AdminPage() {
     });
   };
 
+  const resetEditScheduleForm = () => {
+    setEditScheduleForm({
+      day: 'HÔM NAY',
+      date: '',
+      movie_id: '',
+      title: '',
+      poster: '',
+      season: '',
+      status: 'Sắp chiếu',
+      show_at: '',
+    });
+    setEditingScheduleId(null);
+    setMsg('');
+  };
+
   const selectMovieForSchedule = (movieId) => {
     if (!movieId) {
       setScheduleForm({
@@ -349,10 +350,8 @@ export default function AdminPage() {
       });
       return;
     }
-
     const selectedMovie = movies.find((m) => m.id === movieId);
     if (!selectedMovie) return;
-
     setScheduleForm({
       ...scheduleForm,
       movie_id: movieId,
@@ -392,37 +391,48 @@ export default function AdminPage() {
         }))
       );
     } else {
-      const oldLinks = [];
-      if (m.telegram_url)
-        oldLinks.push({
+      setCustomLinks([
+        {
           name: 'Vào nhóm Telegram',
-          url: m.telegram_url,
+          url: '',
           color: 'sky',
           icon: '/icons/telegram.png',
-        });
-      if (m.messenger_url)
-        oldLinks.push({
-          name: 'Chat Messenger',
-          url: m.messenger_url,
-          color: 'indigo',
-          icon: '',
-        });
-      setCustomLinks(
-        oldLinks.length
-          ? oldLinks
-          : [
-              {
-                name: 'Vào nhóm Telegram',
-                url: '',
-                color: 'sky',
-                icon: '/icons/telegram.png',
-              },
-            ]
-      );
+        },
+      ]);
     }
 
     setMsg('');
+    setEditMode('movie');
     setTab('edit');
+  };
+
+  // 🎯 Bắt đầu sửa LỊCH CHIẾU
+  const startEditSchedule = (item) => {
+    setEditingScheduleId(item.id);
+    
+    // Parse show_at từ DB
+    let showAtValue = '';
+    if (item.show_at) {
+      const dateStr = item.show_at.toString();
+      if (dateStr.includes('T')) {
+        const cleanStr = dateStr.replace('Z', '').replace(/\.\d{3}/, '');
+        showAtValue = cleanStr.slice(0, 16); // "2026-10-11T12:25"
+      } else if (dateStr.includes(' ')) {
+        showAtValue = dateStr.replace(' ', 'T').slice(0, 16);
+      }
+    }
+
+    setEditScheduleForm({
+      day: item.day || 'HÔM NAY',
+      date: item.date || '',
+      movie_id: item.movie_id || '',
+      title: item.title || '',
+      poster: item.poster || '',
+      season: item.season || '',
+      status: item.status || 'Sắp chiếu',
+      show_at: showAtValue,
+    });
+    setMsg('');
   };
 
   const askDelete = (id, title) => {
@@ -519,6 +529,7 @@ export default function AdminPage() {
       .trim()
       .replace(/\s+/g, '-');
 
+  // 🎯 SUBMIT SỬA PHIM
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -575,28 +586,45 @@ export default function AdminPage() {
 
         if (data.success) {
           setMsg('✅ Đã thêm!');
-          setMovie({
-            title: '',
-            title_goc: '',
-            poster: '',
-            season: '',
-            duration: '',
-            tags: '',
-            overview: '',
-          });
-          setSeasons([{ name: 'Phần 1', facebook: '', youtube: '' }]);
-          setCustomLinks([
-            {
-              name: 'Vào nhóm Telegram',
-              url: '',
-              color: 'sky',
-              icon: '/icons/telegram.png',
-            },
-          ]);
+          resetForm();
           setTimeout(() => loadMovies(), 500);
         } else {
           setMsg('❌ Lỗi: ' + (data.error || 'Không rõ'));
         }
+      }
+    } catch (err) {
+      setMsg('❌ Lỗi: ' + err.message);
+    }
+
+    setLoading(false);
+  };
+
+  // 🎯 SUBMIT SỬA LỊCH CHIẾU
+  const handleEditScheduleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMsg('');
+
+    try {
+      const res = await fetch('/api/schedule/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password,
+          id: editingScheduleId,
+          item: editScheduleForm,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setMsg('✅ Đã cập nhật lịch chiếu!');
+        setTimeout(() => {
+          resetEditScheduleForm();
+          loadSchedule();
+        }, 1200);
+      } else {
+        setMsg('❌ Lỗi: ' + (data.error || 'Không rõ'));
       }
     } catch (err) {
       setMsg('❌ Lỗi: ' + err.message);
@@ -788,6 +816,7 @@ export default function AdminPage() {
         </button>
       </div>
 
+      {/* TABS CHÍNH */}
       <div className="flex gap-1.5 mb-6">
         <button
           onClick={() => {
@@ -825,6 +854,9 @@ export default function AdminPage() {
         </button>
       </div>
 
+      {/* ═══════════════════════════════ */}
+      {/* TAB THÊM / LỊCH */}
+      {/* ═══════════════════════════════ */}
       {tab === 'add' && (
         <div>
           <div className="flex gap-2 mb-5 p-1 rounded-2xl card-bg">
@@ -948,7 +980,6 @@ export default function AdminPage() {
                         <option value="CHỦ NHẬT">CHỦ NHẬT</option>
                       </select>
                     </div>
-
                     <div>
                       <label className={label}>Ngày cụ thể</label>
                       <input
@@ -969,14 +1000,10 @@ export default function AdminPage() {
                     <label className={label}>🎬 Chọn phim có sẵn</label>
                     <select
                       value={scheduleForm.movie_id || ''}
-                      onChange={(e) =>
-                        selectMovieForSchedule(e.target.value)
-                      }
+                      onChange={(e) => selectMovieForSchedule(e.target.value)}
                       className={input}
                     >
-                      <option value="">
-                        -- Không chọn (chỉ lên lịch) --
-                      </option>
+                      <option value="">-- Không chọn (chỉ lên lịch) --</option>
                       {movies.map((m) => (
                         <option key={m.id} value={m.id}>
                           {m.title} {m.season ? `(${m.season})` : ''}
@@ -988,10 +1015,7 @@ export default function AdminPage() {
                   {scheduleForm.movie_id && (
                     <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/30">
                       <p className="text-[10px] text-sky-300 font-bold">
-                        ✅ Đã chọn:{' '}
-                        <span className="text-white">
-                          {scheduleForm.title}
-                        </span>
+                        ✅ Đã chọn: <span className="text-white">{scheduleForm.title}</span>
                       </p>
                     </div>
                   )}
@@ -1002,25 +1026,18 @@ export default function AdminPage() {
                       <input
                         value={scheduleForm.season}
                         onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            season: e.target.value,
-                          })
+                          setScheduleForm({ ...scheduleForm, season: e.target.value })
                         }
                         placeholder="Mùa 9"
                         className={input}
                       />
                     </div>
-
                     <div>
                       <label className={label}>Trạng thái</label>
                       <input
                         value={scheduleForm.status}
                         onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            status: e.target.value,
-                          })
+                          setScheduleForm({ ...scheduleForm, status: e.target.value })
                         }
                         placeholder="Sắp chiếu"
                         className={input}
@@ -1028,12 +1045,9 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* ⏰ DROPDOWN 24H */}
                   <DateTimePicker24h
                     value={scheduleForm.show_at}
-                    onChange={(val) =>
-                      setScheduleForm({ ...scheduleForm, show_at: val })
-                    }
+                    onChange={(val) => setScheduleForm({ ...scheduleForm, show_at: val })}
                     input={input}
                     label={label}
                   />
@@ -1096,16 +1110,12 @@ export default function AdminPage() {
                           <option value="CHỦ NHẬT">CHỦ NHẬT</option>
                         </select>
                       </div>
-
                       <div>
                         <label className={label}>Ngày cụ thể</label>
                         <input
                           value={scheduleForm.date}
                           onChange={(e) =>
-                            setScheduleForm({
-                              ...scheduleForm,
-                              date: e.target.value,
-                            })
+                            setScheduleForm({ ...scheduleForm, date: e.target.value })
                           }
                           placeholder="28/09"
                           className={input}
@@ -1113,12 +1123,9 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* ⏰ DROPDOWN 24H */}
                     <DateTimePicker24h
                       value={scheduleForm.show_at}
-                      onChange={(val) =>
-                        setScheduleForm({ ...scheduleForm, show_at: val })
-                      }
+                      onChange={(val) => setScheduleForm({ ...scheduleForm, show_at: val })}
                       input={input}
                       label={label}
                     />
@@ -1128,10 +1135,7 @@ export default function AdminPage() {
                       <input
                         value={scheduleForm.status}
                         onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            status: e.target.value,
-                          })
+                          setScheduleForm({ ...scheduleForm, status: e.target.value })
                         }
                         placeholder="Sắp chiếu"
                         className={input}
@@ -1143,7 +1147,6 @@ export default function AdminPage() {
                     <h4 className="text-xs font-bold text-sky-300 mb-3">
                       🎬 Thông tin phim
                     </h4>
-
                     <MovieForm
                       movie={movie}
                       setMovie={setMovie}
@@ -1168,9 +1171,7 @@ export default function AdminPage() {
                       loading ? 'opacity-50' : ''
                     }`}
                   >
-                    {loading
-                      ? '⏳ Đang xử lý...'
-                      : '🎬📅 Tạo phim + Lên lịch'}
+                    {loading ? '⏳ Đang xử lý...' : '🎬📅 Tạo phim + Lên lịch'}
                   </button>
 
                   {msg && (
@@ -1180,216 +1181,414 @@ export default function AdminPage() {
                   )}
                 </form>
               )}
-
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-slate-500">
-                  Lịch đã thêm:{' '}
-                  <span className="text-amber-400 font-bold">
-                    {scheduleItems.length}
-                  </span>{' '}
-                  mục
-                </p>
-                <button
-                  onClick={loadSchedule}
-                  className="text-xs px-3 py-1.5 rounded-lg card-bg text-slate-300 btn-tap"
-                >
-                  {loadingSchedule ? '⏳' : '🔄 Làm mới'}
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {scheduleItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="card-bg rounded-xl p-3 flex items-center gap-3"
-                  >
-                    {item.poster ? (
-                      <img
-                        src={item.poster}
-                        alt=""
-                        className="w-10 h-14 object-cover rounded-lg shrink-0"
-                      />
-                    ) : (
-                      <div className="w-10 h-14 rounded-lg bg-slate-700 flex items-center justify-center text-slate-500 text-xs">
-                        🎬
-                      </div>
-                    )}
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[10px] font-bold text-amber-300">
-                          {item.day}
-                        </span>
-                        <span className="text-[10px] text-slate-500">
-                          {item.date}
-                        </span>
-                      </div>
-                      <h4 className="text-xs font-bold text-white line-clamp-1">
-                        {item.title}
-                      </h4>
-                      <p className="text-[10px] text-slate-500 truncate">
-                        {item.season} · {item.status}
-                      </p>
-                      {item.show_at && (
-                        <p className="text-[10px] text-amber-400 font-bold truncate mt-0.5">
-                          ⏰{' '}
-                          {new Date(item.show_at).toLocaleString('vi-VN', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
-                          })}
-                        </p>
-                      )}
-                      {item.movie_id && (
-                        <p className="text-[9px] text-rose-300 truncate mt-0.5 font-bold">
-                          ⚠️ Xoá lịch này = xoá luôn phim
-                        </p>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => handleScheduleDelete(item.id)}
-                      className="shrink-0 w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap flex items-center justify-center"
-                      title="Xoá lịch (và xoá phim nếu có)"
-                    >
-                      🗑
-                    </button>
-                  </div>
-                ))}
-
-                {scheduleItems.length === 0 && !loadingSchedule && (
-                  <div className="text-center py-8 opacity-50">
-                    <div className="text-3xl mb-2">📅</div>
-                    <p className="text-xs text-slate-500">
-                      Chưa có lịch chiếu
-                    </p>
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>
       )}
 
+      {/* ═══════════════════════════════ */}
+      {/* TAB SỬA */}
+      {/* ═══════════════════════════════ */}
       {tab === 'edit' && (
         <div>
-          {!editingId && (
+          {/* 🎯 TAB CON: Sửa phim / Sửa lịch */}
+          <div className="flex gap-2 mb-5 p-1 rounded-2xl card-bg">
+            <button
+              onClick={() => {
+                setEditMode('movie');
+                resetForm();
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold btn-tap transition-all flex items-center justify-center gap-1.5 ${
+                editMode === 'movie'
+                  ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              🎬 Sửa phim
+            </button>
+            <button
+              onClick={() => {
+                setEditMode('schedule');
+                resetEditScheduleForm();
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold btn-tap transition-all flex items-center justify-center gap-1.5 ${
+                editMode === 'schedule'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              📅 Sửa lịch chiếu
+            </button>
+          </div>
+
+          {/* SỬA PHIM */}
+          {editMode === 'movie' && (
             <div>
-              <p className="text-xs text-slate-500 mb-3">
-                Chọn phim cần sửa:
-              </p>
-
-              {loadingMovies && movies.length === 0 && (
-                <div className="text-center py-12 text-slate-500 text-sm">
-                  Đang tải danh sách...
-                </div>
-              )}
-
-              {!loadingMovies && movies.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="text-4xl mb-3 opacity-30">🎬</div>
-                  <p className="text-sm text-slate-500">
-                    Chưa có phim nào trong database
+              {!editingId && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Chọn phim cần sửa:
                   </p>
-                </div>
-              )}
 
-              <div className="space-y-2">
-                {movies.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => startEdit(m)}
-                    className="w-full card-bg rounded-xl p-3 flex items-center gap-3 hover:border-sky-400/50 transition-colors btn-tap text-left"
-                  >
-                    <img
-                      src={m.poster}
-                      alt={m.title}
-                      className="w-12 h-16 object-cover rounded-lg shrink-0 bg-[#1e293b]"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-bold text-white line-clamp-1">
-                        {m.title}
-                      </h3>
-                      <p className="text-[10px] text-slate-500 line-clamp-1">
-                        {m.title_goc || '—'}
-                      </p>
-                      <p className="text-[10px] text-slate-600 mt-0.5">
-                        {m.seasons?.length || 0} tập
+                  {loadingMovies && movies.length === 0 && (
+                    <div className="text-center py-12 text-slate-500 text-sm">
+                      Đang tải danh sách...
+                    </div>
+                  )}
+
+                  {!loadingMovies && movies.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="text-4xl mb-3 opacity-30">🎬</div>
+                      <p className="text-sm text-slate-500">
+                        Chưa có phim nào trong database
                       </p>
                     </div>
-                    <div className="text-sky-400 text-lg">✏️</div>
+                  )}
+
+                  <div className="space-y-2">
+                    {movies.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => startEdit(m)}
+                        className="w-full card-bg rounded-xl p-3 flex items-center gap-3 hover:border-sky-400/50 transition-colors btn-tap text-left"
+                      >
+                        <img
+                          src={m.poster}
+                          alt={m.title}
+                          className="w-12 h-16 object-cover rounded-lg shrink-0 bg-[#1e293b]"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-bold text-white line-clamp-1">
+                            {m.title}
+                          </h3>
+                          <p className="text-[10px] text-slate-500 line-clamp-1">
+                            {m.title_goc || '—'}
+                          </p>
+                          <p className="text-[10px] text-slate-600 mt-0.5">
+                            {m.seasons?.length || 0} tập
+                          </p>
+                        </div>
+                        <div className="text-sky-400 text-lg">✏️</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {editingId && (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="flex items-center justify-between mb-4 p-3 rounded-xl bg-sky-500/10 border border-sky-500/30">
+                    <div className="text-xs text-sky-300">
+                      ✏️ Đang sửa: <span className="font-bold">{editingOriginalTitle}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="text-xs text-slate-400 hover:text-rose-300 btn-tap"
+                    >
+                      ✕ Huỷ
+                    </button>
+                  </div>
+
+                  <MovieForm
+                    movie={movie}
+                    setMovie={setMovie}
+                    seasons={seasons}
+                    addSeason={addSeason}
+                    removeSeason={removeSeason}
+                    updateSeason={updateSeason}
+                    customLinks={customLinks}
+                    addCustomLink={addCustomLink}
+                    removeCustomLink={removeCustomLink}
+                    updateCustomLink={updateCustomLink}
+                    toggleTag={toggleTag}
+                    input={input}
+                    label={label}
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold btn-tap ${
+                      loading ? 'opacity-50' : ''
+                    }`}
+                  >
+                    {loading ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
                   </button>
-                ))}
-              </div>
+
+                  {msg && (
+                    <div className="text-sm text-center py-2 rounded-xl card-bg">
+                      {msg}
+                    </div>
+                  )}
+                </form>
+              )}
             </div>
           )}
 
-          {editingId && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex items-center justify-between mb-4 p-3 rounded-xl bg-sky-500/10 border border-sky-500/30">
-                <div className="text-xs text-sky-300">
-                  ✏️ Đang sửa:{' '}
-                  <span className="font-bold">{editingOriginalTitle}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="text-xs text-slate-400 hover:text-rose-300 btn-tap"
-                >
-                  ✕ Huỷ
-                </button>
-              </div>
+          {/* 🎯 SỬA LỊCH CHIẾU */}
+          {editMode === 'schedule' && (
+            <div>
+              {!editingScheduleId && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Chọn lịch chiếu cần sửa:
+                  </p>
 
-              <MovieForm
-                movie={movie}
-                setMovie={setMovie}
-                seasons={seasons}
-                addSeason={addSeason}
-                removeSeason={removeSeason}
-                updateSeason={updateSeason}
-                customLinks={customLinks}
-                addCustomLink={addCustomLink}
-                removeCustomLink={removeCustomLink}
-                updateCustomLink={updateCustomLink}
-                toggleTag={toggleTag}
-                input={input}
-                label={label}
-              />
+                  {loadingSchedule && scheduleItems.length === 0 && (
+                    <div className="text-center py-12 text-slate-500 text-sm">
+                      Đang tải danh sách...
+                    </div>
+                  )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold btn-tap ${
-                  loading ? 'opacity-50' : ''
-                }`}
-              >
-                {loading ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
-              </button>
+                  {!loadingSchedule && scheduleItems.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="text-4xl mb-3 opacity-30">📅</div>
+                      <p className="text-sm text-slate-500">
+                        Chưa có lịch chiếu nào
+                      </p>
+                    </div>
+                  )}
 
-              {msg && (
-                <div className="text-sm text-center py-2 rounded-xl card-bg">
-                  {msg}
+                  <div className="space-y-2">
+                    {scheduleItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => startEditSchedule(item)}
+                        className="w-full card-bg rounded-xl p-3 flex items-center gap-3 hover:border-amber-400/50 transition-colors btn-tap text-left"
+                      >
+                        {item.poster ? (
+                          <img
+                            src={item.poster}
+                            alt=""
+                            className="w-12 h-16 object-cover rounded-lg shrink-0 bg-[#1e293b]"
+                          />
+                        ) : (
+                          <div className="w-12 h-16 rounded-lg bg-slate-700 flex items-center justify-center text-slate-500 text-xl shrink-0">
+                            🎬
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-[10px] font-bold text-amber-300">
+                              {item.day}
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                              {item.date}
+                            </span>
+                          </div>
+                          <h3 className="text-sm font-bold text-white line-clamp-1">
+                            {item.title}
+                          </h3>
+                          <p className="text-[10px] text-slate-500 line-clamp-1">
+                            {item.season} · {item.status}
+                          </p>
+                          {item.show_at && (
+                            <p className="text-[10px] text-amber-400 font-bold truncate mt-0.5">
+                              ⏰{' '}
+                              {new Date(item.show_at).toLocaleString('vi-VN', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false,
+                              })}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-amber-400 text-lg">✏️</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
-            </form>
+
+              {editingScheduleId && (
+                <form onSubmit={handleEditScheduleSubmit} className="space-y-4">
+                  <div className="flex items-center justify-between mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                    <div className="text-xs text-amber-300">
+                      ✏️ Đang sửa lịch: <span className="font-bold">{editScheduleForm.title}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={resetEditScheduleForm}
+                      className="text-xs text-slate-400 hover:text-rose-300 btn-tap"
+                    >
+                      ✕ Huỷ
+                    </button>
+                  </div>
+
+                  <div className="card-bg rounded-2xl p-4 space-y-3">
+                    <h3 className="text-sm font-bold text-amber-400 mb-2">
+                      📅 Thông tin lịch chiếu
+                    </h3>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className={label}>Ngày</label>
+                        <select
+                          value={editScheduleForm.day}
+                          onChange={(e) => {
+                            const newDay = e.target.value;
+                            setEditScheduleForm({
+                              ...editScheduleForm,
+                              day: newDay,
+                              date: calculateDate(newDay),
+                            });
+                          }}
+                          className={input}
+                        >
+                          <option value="HÔM NAY">HÔM NAY</option>
+                          <option value="NGÀY MAI">NGÀY MAI</option>
+                          <option value="THỨ 2">THỨ 2</option>
+                          <option value="THỨ 3">THỨ 3</option>
+                          <option value="THỨ 4">THỨ 4</option>
+                          <option value="THỨ 5">THỨ 5</option>
+                          <option value="THỨ 6">THỨ 6</option>
+                          <option value="THỨ 7">THỨ 7</option>
+                          <option value="CHỦ NHẬT">CHỦ NHẬT</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className={label}>Ngày cụ thể</label>
+                        <input
+                          value={editScheduleForm.date}
+                          onChange={(e) =>
+                            setEditScheduleForm({ ...editScheduleForm, date: e.target.value })
+                          }
+                          placeholder="28/09"
+                          className={input}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={label}>🎬 Chọn phim</label>
+                      <select
+                        value={editScheduleForm.movie_id || ''}
+                        onChange={(e) => {
+                          const movieId = e.target.value;
+                          if (!movieId) {
+                            setEditScheduleForm({
+                              ...editScheduleForm,
+                              movie_id: '',
+                            });
+                            return;
+                          }
+                          const m = movies.find((m) => m.id === movieId);
+                          if (!m) return;
+                          setEditScheduleForm({
+                            ...editScheduleForm,
+                            movie_id: movieId,
+                            title: m.title || '',
+                            poster: m.poster || '',
+                            season: m.season || '',
+                          });
+                        }}
+                        className={input}
+                      >
+                        <option value="">-- Không chọn --</option>
+                        {movies.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.title} {m.season ? `(${m.season})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={label}>Tên phim *</label>
+                      <input
+                        required
+                        value={editScheduleForm.title}
+                        onChange={(e) =>
+                          setEditScheduleForm({ ...editScheduleForm, title: e.target.value })
+                        }
+                        className={input}
+                      />
+                    </div>
+
+                    <div>
+                      <label className={label}>Link ảnh poster</label>
+                      <input
+                        value={editScheduleForm.poster}
+                        onChange={(e) =>
+                          setEditScheduleForm({ ...editScheduleForm, poster: e.target.value })
+                        }
+                        className={input}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className={label}>Mùa</label>
+                        <input
+                          value={editScheduleForm.season}
+                          onChange={(e) =>
+                            setEditScheduleForm({ ...editScheduleForm, season: e.target.value })
+                          }
+                          placeholder="Mùa 9"
+                          className={input}
+                        />
+                      </div>
+                      <div>
+                        <label className={label}>Trạng thái</label>
+                        <input
+                          value={editScheduleForm.status}
+                          onChange={(e) =>
+                            setEditScheduleForm({ ...editScheduleForm, status: e.target.value })
+                          }
+                          placeholder="Sắp chiếu"
+                          className={input}
+                        />
+                      </div>
+                    </div>
+
+                    <DateTimePicker24h
+                      value={editScheduleForm.show_at}
+                      onChange={(val) =>
+                        setEditScheduleForm({ ...editScheduleForm, show_at: val })
+                      }
+                      input={input}
+                      label={label}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold btn-tap ${
+                      loading ? 'opacity-50' : ''
+                    }`}
+                  >
+                    {loading ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
+                  </button>
+
+                  {msg && (
+                    <div className="text-sm text-center py-2 rounded-xl card-bg">
+                      {msg}
+                    </div>
+                  )}
+                </form>
+              )}
+            </div>
           )}
         </div>
       )}
 
+      {/* ═══════════════════════════════ */}
+      {/* TAB XOÁ */}
+      {/* ═══════════════════════════════ */}
       {tab === 'manage' && (
         <div>
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs text-slate-500">
-              Tổng:{' '}
-              <span className="text-amber-400 font-bold">{movies.length}</span>{' '}
-              phim
+              Tổng: <span className="text-amber-400 font-bold">{movies.length}</span> phim
             </p>
             <button
               onClick={loadMovies}
               disabled={loadingMovies}
-              className="text-xs px-3 py-1.5 rounded-lg card-bg text-slate-300 btn-tap hover:border-rose-400/50 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg card-bg text-slate-300 btn-tap"
             >
               {loadingMovies ? '⏳ Đang tải...' : '🔄 Làm mới'}
             </button>
@@ -1404,18 +1603,13 @@ export default function AdminPage() {
           {!loadingMovies && movies.length === 0 && (
             <div className="text-center py-12">
               <div className="text-4xl mb-3 opacity-30">🎬</div>
-              <p className="text-sm text-slate-500">
-                Chưa có phim nào trong database
-              </p>
+              <p className="text-sm text-slate-500">Chưa có phim nào</p>
             </div>
           )}
 
           <div className="space-y-2">
             {movies.map((m) => (
-              <div
-                key={m.id}
-                className="card-bg rounded-xl p-3 flex items-center gap-3"
-              >
+              <div key={m.id} className="card-bg rounded-xl p-3 flex items-center gap-3">
                 <img
                   src={m.poster}
                   alt={m.title}
@@ -1428,15 +1622,12 @@ export default function AdminPage() {
                   <p className="text-[10px] text-slate-500 line-clamp-1">
                     {m.title_goc || '—'}
                   </p>
-                  <p className="text-[10px] text-slate-600 mt-0.5">
-                    ID: {m.id}
-                  </p>
+                  <p className="text-[10px] text-slate-600 mt-0.5">ID: {m.id}</p>
                 </div>
                 <button
                   onClick={() => askDelete(m.id, m.title)}
                   disabled={deletingId === m.id}
                   className="shrink-0 w-9 h-9 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap flex items-center justify-center disabled:opacity-50"
-                  title="Xoá phim"
                 >
                   {deletingId === m.id ? '⏳' : '🗑'}
                 </button>
@@ -1446,6 +1637,7 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Modal xoá */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 anim-fadeIn">
           <div className="card-bg rounded-2xl p-5 max-w-sm w-full anim-fadeInUp">
@@ -1454,15 +1646,9 @@ export default function AdminPage() {
               <h3 className="text-lg font-bold text-white mb-1">Xoá phim?</h3>
               <p className="text-sm text-slate-400">
                 Bạn sắp xoá{' '}
-                <span className="text-rose-300 font-bold">
-                  "{confirmDelete.title}"
-                </span>
-              </p>
-              <p className="text-xs text-slate-500 mt-2">
-                Hành động này không thể hoàn tác
+                <span className="text-rose-300 font-bold">"{confirmDelete.title}"</span>
               </p>
             </div>
-
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmDelete(null)}
@@ -1491,7 +1677,7 @@ export default function AdminPage() {
 }
 
 // ═══════════════════════════════════════════
-// FORM COMPONENT
+// COMPONENT FORM PHIM (giữ nguyên)
 // ═══════════════════════════════════════════
 function MovieForm({
   movie,
@@ -1565,8 +1751,7 @@ function MovieForm({
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label className="text-xs font-bold text-slate-400">
-            Thể loại (
-            {movie.tags.split(',').filter((t) => t.trim()).length} đã chọn)
+            Thể loại ({movie.tags.split(',').filter((t) => t.trim()).length} đã chọn)
           </label>
           {movie.tags && (
             <button
@@ -1610,7 +1795,6 @@ function MovieForm({
               .map((t) => t.trim())
               .filter(Boolean)
               .includes(tag);
-
             return (
               <button
                 key={tag}
@@ -1628,34 +1812,6 @@ function MovieForm({
             );
           })}
         </div>
-
-        <details className="mt-2">
-          <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-300 font-bold">
-            ➕ Thêm thể loại tùy chỉnh
-          </summary>
-          <input
-            type="text"
-            placeholder="Nhập thể loại mới rồi Enter"
-            className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs mt-2"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const newTag = e.target.value.trim();
-                if (newTag && !movie.tags.includes(newTag)) {
-                  const currentTags = movie.tags
-                    .split(',')
-                    .map((t) => t.trim())
-                    .filter(Boolean);
-                  setMovie({
-                    ...movie,
-                    tags: [...currentTags, newTag].join(', '),
-                  });
-                  e.target.value = '';
-                }
-              }
-            }}
-          />
-        </details>
       </div>
 
       <div>
@@ -1686,7 +1842,6 @@ function MovieForm({
 
       {customLinks.map((link, i) => {
         const selectedColor = LINK_COLORS.find((c) => c.id === link.color);
-
         return (
           <div key={i} className="card-bg rounded-xl p-3 space-y-2">
             <div className="flex items-center gap-2">
@@ -1697,8 +1852,7 @@ function MovieForm({
                 className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-sm font-bold"
               />
               {customLinks.length > 1 && (
-                <button
-                  type="button"
+                <button                  type="button"
                   onClick={() => removeCustomLink(i)}
                   className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap"
                 >
@@ -1718,11 +1872,9 @@ function MovieForm({
               <label className="text-[10px] font-bold text-slate-500 mb-1.5 block">
                 Icon
               </label>
-
               <div className="grid grid-cols-4 gap-2">
                 {ICON_PRESETS.map((ic, idx) => {
                   const isSelected = link.icon === ic.path;
-
                   return (
                     <button
                       key={idx}
@@ -1738,12 +1890,7 @@ function MovieForm({
                           : 'border-white/10 bg-black/30 hover:border-sky-400/50 hover:bg-black/50'
                       }`}
                     >
-                      <img
-                        src={ic.path}
-                        alt={ic.name}
-                        className="w-6 h-6 object-contain"
-                        loading="lazy"
-                      />
+                      <img src={ic.path} alt={ic.name} className="w-6 h-6 object-contain" loading="lazy" />
                       <span className="text-[8px] text-slate-400 font-bold truncate w-full text-center">
                         {ic.name}
                       </span>
@@ -1751,7 +1898,6 @@ function MovieForm({
                   );
                 })}
               </div>
-
               <div className="mt-2">
                 <label className="text-[10px] text-slate-500 font-bold block mb-1">
                   Hoặc dán URL icon tùy chỉnh:
@@ -1779,9 +1925,7 @@ function MovieForm({
                       onClick={() => updateCustomLink(i, 'color', c.id)}
                       title={c.name}
                       className={`w-7 h-7 rounded-lg border-2 transition-all ${c.bg} ${c.border} ${
-                        active
-                          ? 'scale-110 ring-2 ring-white/50 shadow-lg'
-                          : 'opacity-60 hover:opacity-100'
+                        active ? 'scale-110 ring-2 ring-white/50 shadow-lg' : 'opacity-60 hover:opacity-100'
                       }`}
                     />
                   );
@@ -1796,13 +1940,7 @@ function MovieForm({
               <div
                 className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 ${selectedColor?.bg} ${selectedColor?.border} ${selectedColor?.text}`}
               >
-                {link.icon && (
-                  <img
-                    src={link.icon}
-                    alt=""
-                    className="w-4 h-4 object-contain"
-                  />
-                )}
+                {link.icon && <img src={link.icon} alt="" className="w-4 h-4 object-contain" />}
                 <span className="truncate">{link.name || 'Tên link'}</span>
               </div>
             </div>
@@ -1844,14 +1982,12 @@ function MovieForm({
               </button>
             )}
           </div>
-
           <input
             value={s.facebook}
             onChange={(e) => updateSeason(i, 'facebook', e.target.value)}
             placeholder="Link Facebook"
             className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
           />
-
           <input
             value={s.youtube}
             onChange={(e) => updateSeason(i, 'youtube', e.target.value)}
