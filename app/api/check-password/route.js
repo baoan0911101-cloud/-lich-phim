@@ -1,13 +1,16 @@
 export async function POST(request) {
   try {
-    const { password } = await request.json();
+    const { email, password } = await request.json();
 
-    if (password === process.env.ADMIN_PASSWORD) {
+    if (
+      email === process.env.ADMIN_EMAIL &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
       return Response.json({ ok: true });
     }
 
     return Response.json(
-      { ok: false, error: 'Sai mật khẩu' },
+      { ok: false, error: 'Sai email hoặc mật khẩu' },
       { status: 401 }
     );
   } catch (err) {
