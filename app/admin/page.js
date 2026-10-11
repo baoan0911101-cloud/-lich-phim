@@ -1489,9 +1489,9 @@ export default function AdminPage() {
                     </button>
                   </div>
 
-                  {/* 📅 THÔNG TIN LỊCH CHIẾU — CHỈ PHẦN NÀY THÊM */}
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-bold text-amber-400">
+                  {/* 📅 THÔNG TIN LỊCH CHIẾU — CARD VÀNG */}
+                  <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/30 space-y-3">
+                    <h3 className="text-sm font-bold text-amber-300">
                       📅 Thông tin lịch chiếu
                     </h3>
 
@@ -1556,86 +1556,86 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <hr className="border-[#1e293b]" />
-
-                  {/* 🎬 THÔNG TIN PHIM — DÙNG MovieForm, KHÔNG CARD */}
-                  <MovieForm
-                    movie={{
-                      title: editScheduleForm.title,
-                      title_goc: editScheduleForm.title_goc,
-                      poster: editScheduleForm.poster,
-                      season: editScheduleForm.season,
-                      duration: editScheduleForm.duration,
-                      tags: editScheduleForm.tags,
-                      overview: editScheduleForm.overview,
-                    }}
-                    setMovie={(newMovie) => {
-                      setEditScheduleForm({
-                        ...editScheduleForm,
-                        title: newMovie.title,
-                        title_goc: newMovie.title_goc,
-                        poster: newMovie.poster,
-                        season: newMovie.season,
-                        duration: newMovie.duration,
-                        tags: newMovie.tags,
-                        overview: newMovie.overview,
-                      });
-                    }}
-                    seasons={editSeasons}
-                    addSeason={() =>
-                      setEditSeasons([
-                        ...editSeasons,
-                        {
-                          name: `Phần ${editSeasons.length + 1}`,
-                          facebook: '',
-                          youtube: '',
-                        },
-                      ])
-                    }
-                    removeSeason={(i) =>
-                      setEditSeasons(editSeasons.filter((_, idx) => idx !== i))
-                    }
-                    updateSeason={(i, key, value) => {
-                      const newSeasons = [...editSeasons];
-                      newSeasons[i][key] = value;
-                      setEditSeasons(newSeasons);
-                    }}
-                    customLinks={editCustomLinks}
-                    addCustomLink={() =>
-                      setEditCustomLinks([
-                        ...editCustomLinks,
-                        { name: '', url: '', color: 'slate', icon: '' },
-                      ])
-                    }
-                    removeCustomLink={(i) =>
-                      setEditCustomLinks(editCustomLinks.filter((_, idx) => idx !== i))
-                    }
-                    updateCustomLink={(i, key, value) => {
-                      const newLinks = [...editCustomLinks];
-                      newLinks[i][key] = value;
-                      setEditCustomLinks(newLinks);
-                    }}
-                    toggleTag={(tag) => {
-                      const currentTags = editScheduleForm.tags
-                        .split(',')
-                        .map((t) => t.trim())
-                        .filter(Boolean);
-
-                      if (currentTags.includes(tag)) {
+                  {/* 🎬 + 🔗 + 🎞 — CARD XANH DƯƠNG */}
+                  <div className="p-4 rounded-2xl bg-sky-500/5 border border-sky-500/30">
+                    <MovieForm
+                      movie={{
+                        title: editScheduleForm.title,
+                        title_goc: editScheduleForm.title_goc,
+                        poster: editScheduleForm.poster,
+                        season: editScheduleForm.season,
+                        duration: editScheduleForm.duration,
+                        tags: editScheduleForm.tags,
+                        overview: editScheduleForm.overview,
+                      }}
+                      setMovie={(newMovie) => {
                         setEditScheduleForm({
                           ...editScheduleForm,
-                          tags: currentTags.filter((t) => t !== tag).join(', '),
+                          title: newMovie.title,
+                          title_goc: newMovie.title_goc,
+                          poster: newMovie.poster,
+                          season: newMovie.season,
+                          duration: newMovie.duration,
+                          tags: newMovie.tags,
+                          overview: newMovie.overview,
                         });
-                      } else {
-                        setEditScheduleForm({
-                          ...editScheduleForm,
-                          tags: [...currentTags, tag].join(', '),
-                        });
+                      }}
+                      seasons={editSeasons}
+                      addSeason={() =>
+                        setEditSeasons([
+                          ...editSeasons,
+                          {
+                            name: `Phần ${editSeasons.length + 1}`,
+                            facebook: '',
+                            youtube: '',
+                          },
+                        ])
                       }
-                    }}
-                    input={input}
-                    label={label}
-                  />
+                      removeSeason={(i) =>
+                        setEditSeasons(editSeasons.filter((_, idx) => idx !== i))
+                      }
+                      updateSeason={(i, key, value) => {
+                        const newSeasons = [...editSeasons];
+                        newSeasons[i][key] = value;
+                        setEditSeasons(newSeasons);
+                      }}
+                      customLinks={editCustomLinks}
+                      addCustomLink={() =>
+                        setEditCustomLinks([
+                          ...editCustomLinks,
+                          { name: '', url: '', color: 'slate', icon: '' },
+                        ])
+                      }
+                      removeCustomLink={(i) =>
+                        setEditCustomLinks(editCustomLinks.filter((_, idx) => idx !== i))
+                      }
+                      updateCustomLink={(i, key, value) => {
+                        const newLinks = [...editCustomLinks];
+                        newLinks[i][key] = value;
+                        setEditCustomLinks(newLinks);
+                      }}
+                      toggleTag={(tag) => {
+                        const currentTags = editScheduleForm.tags
+                          .split(',')
+                          .map((t) => t.trim())
+                          .filter(Boolean);
+
+                        if (currentTags.includes(tag)) {
+                          setEditScheduleForm({
+                            ...editScheduleForm,
+                            tags: currentTags.filter((t) => t !== tag).join(', '),
+                          });
+                        } else {
+                          setEditScheduleForm({
+                            ...editScheduleForm,
+                            tags: [...currentTags, tag].join(', '),
+                          });
+                        }
+                      }}
+                      input={input}
+                      label={label}
+                    />
+                  </div>
 
                   <button
                     type="submit"
