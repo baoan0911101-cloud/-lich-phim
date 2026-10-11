@@ -412,7 +412,7 @@ export default function MovieModal({ movie, onClose }) {
                             <div className="text-[9px] text-slate-500 truncate">
                               {isAvailable ? (
                                 <span className="text-emerald-400 font-bold">
-                                  ● {hasYt && hasFb
+                                  ● {hasFb && hasYt
                                     ? 'Có FB + YT'
                                     : hasFb
                                     ? 'Có Facebook'
