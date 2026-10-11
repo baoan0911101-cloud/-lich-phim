@@ -26,17 +26,11 @@ export async function POST(request) {
       }
     }
 
-    // 🎯 UPDATE LỊCH
+    // UPDATE LỊCH
     await query(
       `UPDATE schedule SET
-        day = $1,
-        date = $2,
-        movie_id = $3,
-        title = $4,
-        poster = $5,
-        season = $6,
-        status = $7,
-        show_at = $8
+        day = $1, date = $2, movie_id = $3, title = $4, poster = $5,
+        season = $6, status = $7, show_at = $8
        WHERE id = $9`,
       [
         item.day,
@@ -51,7 +45,7 @@ export async function POST(request) {
       ]
     );
 
-    // 🎯 NẾU CÓ movie_id → UPDATE PHIM
+    // NẾU CÓ movie_id → UPDATE PHIM
     if (item.movie_id) {
       const existingMovie = await query(
         'SELECT id FROM movies WHERE id = $1',
@@ -59,18 +53,11 @@ export async function POST(request) {
       );
 
       if (existingMovie.rows.length > 0) {
-        // Update phim
         await query(
           `UPDATE movies SET
-            title = $1,
-            title_goc = $2,
-            poster = $3,
-            season = $4,
-            tags = $5,
-            total_duration = $6,
-            overview = $7,
-            custom_links = $8,
-            updated_at = NOW()
+            title = $1, title_goc = $2, poster = $3, season = $4,
+            tags = $5, total_duration = $6, overview = $7,
+            custom_links = $8, updated_at = NOW()
            WHERE id = $9`,
           [
             item.title,
@@ -89,9 +76,7 @@ export async function POST(request) {
 
         // Xoá seasons cũ + thêm lại
         if (seasons?.length) {
-          await query('DELETE FROM seasons WHERE movie_id = $1', [
-            item.movie_id,
-          ]);
+          await query('DELETE FROM seasons WHERE movie_id = $1', [item.movie_id]);
 
           for (let i = 0; i < seasons.length; i++) {
             const s = seasons[i];
