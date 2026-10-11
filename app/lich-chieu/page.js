@@ -3,6 +3,68 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import MovieModal from '@/components/MovieModal';
 
+// 🎯 PARSE GIỜ TỪ DB (giờ VN, không convert timezone)
+const parseShowAt = (showAt) => {
+  if (!showAt) return null;
+
+  const dateStr = showAt.toString();
+
+  if (dateStr.includes('T')) {
+    const cleanStr = dateStr.replace('Z', '').replace(/\.\d{3}/, '');
+    const [datePart, timePart] = cleanStr.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+
+    return {
+      hour,
+      minute,
+      day,
+      month,
+      year,
+      date: new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hour),
+        parseInt(minute)
+      ),
+    };
+  }
+
+  if (dateStr.includes(' ')) {
+    const [datePart, timePart] = dateStr.split(' ');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+
+    return {
+      hour,
+      minute,
+      day,
+      month,
+      year,
+      date: new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hour),
+        parseInt(minute)
+      ),
+    };
+  }
+
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+
+  return {
+    hour: String(d.getHours()).padStart(2, '0'),
+    minute: String(d.getMinutes()).padStart(2, '0'),
+    day: String(d.getDate()).padStart(2, '0'),
+    month: String(d.getMonth() + 1).padStart(2, '0'),
+    year: String(d.getFullYear()),
+    date: d,
+  };
+};
+
 // 📅 TỰ ĐỘNG TÍNH NGÀY TỪ "DAY"
 const getDateFromDay = (day) => {
   const today = new Date();
@@ -54,7 +116,7 @@ export default function LichChieuPage() {
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState('Tất cả');
   const [selectedMovie, setSelectedMovie] = useState(null);
-  const [movieCache, setMovieCache] = useState({}); // 🎯 CACHE
+  const [movieCache, setMovieCache] = useState({});
 
   useEffect(() => {
     Promise.all([
@@ -79,7 +141,6 @@ export default function LichChieuPage() {
 
   const days = Object.keys(grouped);
 
-  // 🎯 PRELOAD KHI HOVER
   const preloadMovie = (movieId) => {
     if (!movieId || movieCache[movieId]) return;
 
@@ -91,11 +152,9 @@ export default function LichChieuPage() {
       .catch(() => {});
   };
 
-  // 🎯 MỞ POPUP — DÙNG CACHE NẾU CÓ
   const handleOpenMovie = async (item) => {
     if (!item.movie_id) return;
 
-    // Tạo data tạm từ schedule để mở popup ngay
     const tempData = {
       id: item.movie_id,
       title: item.title,
@@ -103,18 +162,15 @@ export default function LichChieuPage() {
       season: item.season,
       show_at: item.show_at || null,
       schedule_id: item.id,
-      // Placeholder
       tags: [],
       custom_links: [],
       seasons: [],
       overview: '',
-      _loading: true, // 🎯 Đánh dấu đang load
+      _loading: true,
     };
 
-    // Mở popup ngay với data tạm
     setSelectedMovie(tempData);
 
-    // Nếu có cache → dùng luôn
     if (movieCache[item.movie_id]) {
       const cached = movieCache[item.movie_id];
       setSelectedMovie({
@@ -129,7 +185,6 @@ export default function LichChieuPage() {
       return;
     }
 
-    // Chưa có cache → gọi API và update sau
     try {
       const res = await fetch(`/api/movies/${item.movie_id}`);
       if (!res.ok) return;
@@ -147,10 +202,7 @@ export default function LichChieuPage() {
         _loading: false,
       };
 
-      // Lưu vào cache
       setMovieCache((prev) => ({ ...prev, [item.movie_id]: fullMovie }));
-
-      // Update popup với data đầy đủ
       setSelectedMovie(mergedData);
     } catch (err) {
       console.error('Lỗi mở popup:', err);
@@ -263,13 +315,15 @@ export default function LichChieuPage() {
             {items.map((item, i) => {
               const movieData = movies.find((m) => m.id === item.movie_id);
               const isAvailable = !!item.movie_id;
+              const showAtInfo = parseShowAt(item.show_at);
+              const isFuture = showAtInfo && showAtInfo.date > new Date();
 
               return (
                 <div
                   key={`${item.id}-${i}`}
                   onClick={() => handleOpenMovie(item)}
-                  onMouseEnter={() => preloadMovie(item.movie_id)} // 🎯 PRELOAD
-                  onTouchStart={() => preloadMovie(item.movie_id)} // 🎯 PRELOAD MOBILE
+                  onMouseEnter={() => preloadMovie(item.movie_id)}
+                  onTouchStart={() => preloadMovie(item.movie_id)}
                   className={`block anim-fadeInUp group ${
                     isAvailable ? 'cursor-pointer' : 'cursor-default'
                   }`}
@@ -303,15 +357,11 @@ export default function LichChieuPage() {
                       </div>
                     )}
 
-                    {item.show_at && new Date(item.show_at) > new Date() && (
+                    {/* 🎯 BADGE GIỜ — HIỂN THỊ ĐÚNG */}
+                    {isFuture && showAtInfo && (
                       <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur text-[9px] font-bold text-white flex items-center gap-1">
-                        ⏰{' '}
-                        {new Date(item.show_at).toLocaleString('vi-VN', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        ⏰ {showAtInfo.hour}:{showAtInfo.minute}{' '}
+                        {showAtInfo.day}/{showAtInfo.month}
                       </div>
                     )}
 
