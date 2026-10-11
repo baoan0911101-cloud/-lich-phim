@@ -211,7 +211,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 🎯 FEATURED (mobile) — FIX: 2 card nhỏ đều nhau */}
+        {/* FEATURED (mobile) */}
         {!showSaved && !search && featured && (
           <section className="anim-fadeInUp d-2 md:hidden">
             <div className="flex items-center justify-between mb-3">
@@ -226,86 +226,68 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* 🎯 grid-rows-2 chia đều chiều cao */}
-            <div className="grid grid-cols-3 grid-rows-2 gap-2.5 h-[420px]">
-              {/* CARD HOT — chiếm 2 cột, 2 hàng */}
+            <div className="grid grid-cols-3 gap-2.5">
+              {/* CARD HOT */}
               <div
                 onClick={() => setSelectedMovie(featured)}
                 className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden card-hover group card-bg cursor-pointer"
               >
-                <img
-                  src={featured.poster}
-                  alt={featured.title}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    if (e.target.nextSibling) {
-                      e.target.nextSibling.style.display = 'flex';
-                    }
-                  }}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="hidden absolute inset-0 items-center justify-center bg-[#151d2e] text-slate-600 text-6xl">
-                  🎬
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg">
-                  🔥 HOT
-                </div>
-                <div className="absolute inset-x-0 bottom-0 p-3">
-                  <h3 className="text-sm font-black text-white leading-tight line-clamp-2 mb-1">
-                    {featured.title}
-                  </h3>
-                  <p className="text-[10px] text-slate-300 line-clamp-1 mb-1.5">
-                    {featured.title_goc}
-                  </p>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-300 mb-2">
-                    {featured.total_duration && (
-                      <span className="text-amber-400 font-bold">
-                        ⏱ {featured.total_duration}
-                      </span>
-                    )}
-                    {featured.season && (
-                      <>
-                        <span className="text-slate-500">·</span>
-                        <span className="text-rose-300 font-bold">
-                          {featured.season}
-                        </span>
-                      </>
-                    )}
+                <div className="aspect-[4/5] relative">
+                  <img
+                    src={featured.poster}
+                    alt={featured.title}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      if (e.target.nextSibling) {
+                        e.target.nextSibling.style.display = 'flex';
+                      }
+                    }}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="hidden absolute inset-0 items-center justify-center bg-[#151d2e] text-slate-600 text-6xl">
+                    🎬
                   </div>
-                  <button className="w-full py-2 rounded-xl bg-white/15 backdrop-blur border border-white/20 text-white text-xs font-bold btn-tap hover:bg-white/25 transition-colors">
-                    ▶ Xem ngay
-                  </button>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black shadow-lg">
+                    🔥 HOT
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 p-3.5">
+                    <h3 className="text-base font-black text-white leading-tight line-clamp-2 mb-1">
+                      {featured.title}
+                    </h3>
+                    <p className="text-[10px] text-slate-300 line-clamp-1 mb-2">
+                      {featured.title_goc}
+                    </p>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-300 mb-2.5">
+                      {featured.total_duration && (
+                        <span className="text-amber-400 font-bold">
+                          ⏱ {featured.total_duration}
+                        </span>
+                      )}
+                      {featured.season && (
+                        <>
+                          <span className="text-slate-500">·</span>
+                          <span className="text-rose-300 font-bold">
+                            {featured.season}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <button className="w-full py-2 rounded-xl bg-white/15 backdrop-blur border border-white/20 text-white text-xs font-bold btn-tap hover:bg-white/25 transition-colors">
+                      ▶ Xem ngay
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* 🎯 2 CARD NHỎ — luôn hiện đủ, đều nhau */}
-              {[0, 1].map((idx) => {
-                const m = sideMovies[idx];
-
-                // Nếu thiếu phim → hiện card trống
-                if (!m) {
-                  return (
-                    <div
-                      key={`empty-${idx}`}
-                      className="relative rounded-2xl card-bg border border-[#1e293b] flex items-center justify-center"
-                    >
-                      <div className="text-center opacity-30">
-                        <div className="text-3xl">🎬</div>
-                        <p className="text-[9px] text-slate-500 mt-1">
-                          Chưa có
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    key={m.id}
-                    onClick={() => setSelectedMovie(m)}
-                    className="relative rounded-2xl overflow-hidden card-hover group card-bg cursor-pointer"
-                  >
+              {/* 2 CARD NHỎ */}
+              {sideMovies.map((m) => (
+                <div
+                  key={m.id}
+                  onClick={() => setSelectedMovie(m)}
+                  className="relative rounded-2xl overflow-hidden card-hover group card-bg cursor-pointer"
+                >
+                  <div className="aspect-[2/3] relative">
                     <img
                       src={m.poster}
                       alt={m.title}
@@ -315,7 +297,7 @@ export default function HomePage() {
                           e.target.nextSibling.style.display = 'flex';
                         }
                       }}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="hidden absolute inset-0 items-center justify-center bg-[#151d2e] text-slate-600 text-4xl">
                       🎬
@@ -327,8 +309,8 @@ export default function HomePage() {
                       </h3>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </section>
         )}
