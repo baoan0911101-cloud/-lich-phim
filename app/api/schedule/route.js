@@ -2,11 +2,11 @@ import { query } from '@/lib/db';
 
 export async function GET() {
   try {
-    // Xoá lịch đã qua show_at
+    // Xoá lịch đã qua show_at (dùng giờ VN)
     await query(
       `DELETE FROM schedule 
        WHERE show_at IS NOT NULL 
-         AND show_at <= NOW()`
+         AND show_at <= NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh'`
     );
 
     // Xoá lịch "HÔM NAY" từ hôm qua
@@ -99,6 +99,21 @@ export async function POST(request) {
       }
     }
 
+    // 🎯 XỬ LÝ TIMEZONE CHO show_at
+    // Input: "2026-10-11T12:25" (giờ VN - UTC+7)
+    // DB: TIMESTAMP WITHOUT TIME ZONE
+    // → Lưu thẳng số giờ VN vào DB, KHÔNG convert
+    let showAtValue = null;
+    if (item.show_at) {
+      // Nếu có dạng "YYYY-MM-DDTHH:MM" → giữ nguyên (đã là giờ VN)
+      // PostgreSQL sẽ hiểu đây là timestamp không timezone
+      showAtValue = item.show_at.replace('T', ' ');
+      // VD: "2026-10-11T12:25" → "2026-10-11 12:25:00"
+      if (showAtValue.length === 16) {
+        showAtValue += ':00';
+      }
+    }
+
     // 🎯 INSERT LỊCH CHIẾU
     const result = await query(
       `INSERT INTO schedule (day, date, movie_id, title, poster, season, status, show_at, sort_order)
@@ -112,7 +127,7 @@ export async function POST(request) {
         item.poster || null,
         item.season || null,
         item.status || 'Sắp chiếu',
-        item.show_at || null,
+        showAtValue,
         sortOrder,
       ]
     );
