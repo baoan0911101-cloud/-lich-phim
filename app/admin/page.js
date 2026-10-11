@@ -930,19 +930,50 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className={label}>⏰ Giờ xem được</label>
-                    <input
-                      type="datetime-local"
-                      value={scheduleForm.show_at || ''}
-                      onChange={(e) =>
-                        setScheduleForm({
-                          ...scheduleForm,
-                          show_at: e.target.value,
-                        })
-                      }
-                      className={input}
-                    />
-                  </div>
+                      <label className={label}>⏰ Giờ xem được</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* Ô chọn NGÀY */}
+                        <input
+                          type="date"
+                          value={scheduleForm.show_at ? scheduleForm.show_at.split('T')[0] : ''}
+                          onChange={(e) => {
+                            const datePart = e.target.value;
+                            const timePart = scheduleForm.show_at
+                              ? scheduleForm.show_at.split('T')[1] || '00:00'
+                              : '00:00';
+                            setScheduleForm({
+                              ...scheduleForm,
+                              show_at: datePart ? `${datePart}T${timePart}` : '',
+                            });
+                          }}
+                          className={input}
+                        />
+
+                        {/* Ô chọn GIỜ 24H */}
+                        <input
+                          type="time"
+                          value={
+                            scheduleForm.show_at
+                              ? scheduleForm.show_at.split('T')[1] || '00:00'
+                              : ''
+                          }
+                          onChange={(e) => {
+                            const timePart = e.target.value;
+                            const datePart = scheduleForm.show_at
+                              ? scheduleForm.show_at.split('T')[0] || ''
+                              : new Date().toISOString().split('T')[0];
+                            setScheduleForm({
+                              ...scheduleForm,
+                              show_at: datePart ? `${datePart}T${timePart}` : '',
+                            });
+                          }}
+                          className={input}
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        Ngày + Giờ (24h). VD: 10/10/2026 + 20:00
+                      </p>
+                    </div>
 
                   <button
                     type="submit"
