@@ -211,7 +211,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* FEATURED (mobile) */}
+        {/* FEATURED (mobile) — Card HOT dùng absolute để khớp 2 card nhỏ */}
         {!showSaved && !search && featured && (
           <section className="anim-fadeInUp d-2 md:hidden">
             <div className="flex items-center justify-between mb-3">
@@ -227,12 +227,12 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-3 gap-2.5">
-              {/* CARD HOT */}
+              {/* 🎯 CARD HOT — dùng absolute inset-0 để tự động fill ô grid */}
               <div
                 onClick={() => setSelectedMovie(featured)}
                 className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden card-hover group card-bg cursor-pointer"
               >
-               <div className="aspect-[3/6] relative">
+                <div className="absolute inset-0">
                   <img
                     src={featured.poster}
                     alt={featured.title}
@@ -280,7 +280,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* 2 CARD NHỎ */}
+              {/* 2 CARD NHỎ — aspect 2:3 */}
               {sideMovies.map((m) => (
                 <div
                   key={m.id}
