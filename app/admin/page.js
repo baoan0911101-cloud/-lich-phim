@@ -158,6 +158,7 @@ function DateTimePicker24h({ value, onChange, input, label }) {
 }
 
 export default function AdminPage() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -286,13 +287,14 @@ export default function AdminPage() {
       const res = await fetch('/api/check-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (res.ok) {
         setUnlocked(true);
       } else {
-        setLoginMsg('❌ Sai mật khẩu');
+        const data = await res.json().catch(() => ({}));
+        setLoginMsg('❌ ' + (data.error || 'Sai email hoặc mật khẩu'));
       }
     } catch {
       setLoginMsg('❌ Không kết nối được server');
@@ -832,50 +834,109 @@ export default function AdminPage() {
     'w-full h-11 rounded-xl card-bg px-4 text-sm focus:outline-none focus:border-rose-400/50';
   const label = 'text-xs font-bold text-slate-400 mb-1.5 block';
 
+  // ═══════════════════════════════════════════
+  // 🔐 FORM ĐĂNG NHẬP (EMAIL + MẬT KHẨU)
+  // ═══════════════════════════════════════════
   if (!unlocked) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <div className="card-bg rounded-2xl p-6 max-w-sm w-full anim-fadeInUp">
-          <div className="text-center mb-5">
-            <div className="text-4xl mb-2">🔐</div>
-            <h1 className="text-xl font-black grad-text mb-1">
-              Trang quản trị
-            </h1>
-            <p className="text-xs text-slate-500">Nhập mật khẩu để tiếp tục</p>
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-sm anim-fadeInUp">
+          <div className="rounded-3xl bg-[#0f1729] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] p-8">
+            {/* ICON */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center animate-[iconBounce_0.6s_cubic-bezier(0.34,1.56,0.64,1)_both]">
+                <span className="text-3xl">🛡</span>
+              </div>
+            </div>
+
+            {/* TIÊU ĐỀ */}
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-black text-white mb-2">
+                Đăng nhập Quản trị
+              </h1>
+              <p className="text-xs text-slate-500">
+                Nhập tài khoản để quản lý cơ sở dữ liệu phim & liên kết
+              </p>
+            </div>
+
+            {/* FORM */}
+            <form onSubmit={handleUnlock} className="space-y-4">
+              {/* EMAIL */}
+              <div>
+                <label className="text-xs font-bold text-slate-400 mb-2 block">
+                  Email
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                    ✉
+                  </span>
+                  <input
+                    type="email"
+                    required
+                    autoFocus
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@example.com"
+                    className="w-full h-12 rounded-xl bg-[#151d2e] border border-[#1e293b] pl-11 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* MẬT KHẨU */}
+              <div>
+                <label className="text-xs font-bold text-slate-400 mb-2 block">
+                  Mật khẩu
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                    🔒
+                  </span>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full h-12 rounded-xl bg-[#151d2e] border border-[#1e293b] pl-11 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* NÚT ĐĂNG NHẬP */}
+              <button
+                type="submit"
+                disabled={checking}
+                className={`group relative w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm overflow-hidden btn-tap shadow-[0_8px_24px_rgba(251,146,60,0.4)] hover:shadow-[0_12px_32px_rgba(251,146,60,0.6)] transition-all ${
+                  checking ? 'opacity-50' : ''
+                }`}
+              >
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                <span className="relative flex items-center justify-center gap-2">
+                  <span className="text-lg">{checking ? '⏳' : '🔓'}</span>
+                  <span>{checking ? 'Đang kiểm tra...' : 'Đăng nhập'}</span>
+                </span>
+              </button>
+
+              {/* THÔNG BÁO LỖI */}
+              {loginMsg && (
+                <div className="text-sm text-center py-2.5 px-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 anim-fadeIn">
+                  {loginMsg}
+                </div>
+              )}
+            </form>
           </div>
 
-          <form onSubmit={handleUnlock} className="space-y-3">
-            <input
-              type="password"
-              required
-              autoFocus
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mật khẩu admin"
-              className={input}
-            />
-
-            <button
-              type="submit"
-              disabled={checking}
-              className={`w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold btn-tap ${
-                checking ? 'opacity-50' : ''
-              }`}
-            >
-              {checking ? '⏳ Đang kiểm tra...' : '🔓 Mở khóa'}
-            </button>
-
-            {loginMsg && (
-              <div className="text-sm text-center py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300">
-                {loginMsg}
-              </div>
-            )}
-          </form>
+          <p className="text-center text-[10px] text-slate-600 mt-4">
+            Chỉ admin mới có thể truy cập trang này
+          </p>
         </div>
       </div>
     );
   }
 
+  // ═══════════════════════════════════════════
+  // 🔓 SAU KHI ĐĂNG NHẬP
+  // ═══════════════════════════════════════════
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-5">
@@ -883,6 +944,7 @@ export default function AdminPage() {
         <button
           onClick={() => {
             setUnlocked(false);
+            setEmail('');
             setPassword('');
             resetForm();
             resetScheduleForm();
