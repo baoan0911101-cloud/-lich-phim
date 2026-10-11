@@ -353,11 +353,11 @@ export default function MoviePage() {
                         <div className="text-[10px] mt-0.5">
                           <span className="text-emerald-400 font-bold">
                             ●{' '}
-                            {hasYt && hasFb
+                            {hasFb && hasYt
                               ? 'Có YouTube + Facebook'
-                              : hasYt
-                              ? 'Có YouTube'
-                              : 'Có Facebook'}
+                              : hasFb
+                              ? 'Có Facebook'
+                              : 'Có YouTube'}
                           </span>
                         </div>
                       </div>
