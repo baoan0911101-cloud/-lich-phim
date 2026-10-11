@@ -4,6 +4,71 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { formatRelativeDate } from '@/lib/formatDate';
 
+// 🎯 HÀM PARSE GIỜ TỪ DB (giờ VN, không convert timezone)
+const parseShowAt = (showAt) => {
+  if (!showAt) return null;
+
+  const dateStr = showAt.toString();
+
+  // Trường hợp 1: PostgreSQL trả về ISO string "2026-10-11T12:25:00.000Z"
+  if (dateStr.includes('T')) {
+    const cleanStr = dateStr.replace('Z', '').replace(/\.\d{3}/, '');
+    const [datePart, timePart] = cleanStr.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+
+    return {
+      hour,
+      minute,
+      day,
+      month,
+      year,
+      date: new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hour),
+        parseInt(minute)
+      ),
+    };
+  }
+
+  // Trường hợp 2: PostgreSQL trả về "2026-10-11 12:25:00"
+  if (dateStr.includes(' ')) {
+    const [datePart, timePart] = dateStr.split(' ');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+
+    return {
+      hour,
+      minute,
+      day,
+      month,
+      year,
+      date: new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hour),
+        parseInt(minute)
+      ),
+    };
+  }
+
+  // Fallback
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+
+  return {
+    hour: String(d.getHours()).padStart(2, '0'),
+    minute: String(d.getMinutes()).padStart(2, '0'),
+    day: String(d.getDate()).padStart(2, '0'),
+    month: String(d.getMonth() + 1).padStart(2, '0'),
+    year: String(d.getFullYear()),
+    date: d,
+  };
+};
+
 export default function MoviePage() {
   const { id } = useParams();
   const router = useRouter();
@@ -66,17 +131,11 @@ export default function MoviePage() {
 
   if (!movie) return null;
 
-  // 🎯 CHECK GIỜ XEM
-  const isTimeLocked =
-    movie.show_at && new Date(movie.show_at) > new Date();
-  const showAtText = movie.show_at
-    ? new Date(movie.show_at).toLocaleString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+  // 🎯 CHECK GIỜ XEM — Dùng hàm parse (không lệch timezone)
+  const showAtInfo = parseShowAt(movie.show_at);
+  const isTimeLocked = showAtInfo ? showAtInfo.date > new Date() : false;
+  const showAtText = showAtInfo
+    ? `${showAtInfo.hour}:${showAtInfo.minute} ${showAtInfo.day}/${showAtInfo.month}/${showAtInfo.year}`
     : '';
 
   const customLinks = (movie.custom_links || []).filter(
@@ -260,9 +319,13 @@ export default function MoviePage() {
 
           <div className="space-y-3">
             {movie.seasons?.map((s, i) => {
-              const hasLink = !!s.facebook;
-              const isAvailable = hasLink && !isTimeLocked;
-              const isLocked = hasLink && isTimeLocked;
+              // 🎯 CHECK ĐỘC LẬP FB + YT
+              const hasFb = !!s.facebook;
+              const hasYt = !!s.youtube;
+              const hasAnyLink = hasFb || hasYt;
+              const isAvailable = hasAnyLink && !isTimeLocked;
+              const isLocked = hasAnyLink && isTimeLocked;
+              const primaryLink = s.youtube || s.facebook;
 
               return (
                 <div
@@ -272,9 +335,10 @@ export default function MoviePage() {
                   }`}
                   style={{ animationDelay: `${0.25 + i * 0.06}s` }}
                 >
+                  {/* HEADER TẬP */}
                   {isAvailable ? (
                     <a
-                      href={s.facebook}
+                      href={primaryLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 mb-3 group cursor-pointer"
@@ -288,7 +352,12 @@ export default function MoviePage() {
                         </div>
                         <div className="text-[10px] mt-0.5">
                           <span className="text-emerald-400 font-bold">
-                            ● Có thể xem
+                            ●{' '}
+                            {hasYt && hasFb
+                              ? 'Có YouTube + Facebook'
+                              : hasYt
+                              ? 'Có YouTube'
+                              : 'Có Facebook'}
                           </span>
                         </div>
                       </div>
@@ -329,18 +398,9 @@ export default function MoviePage() {
                     </div>
                   )}
 
-                  {/* NÚT PHỤ */}
+                  {/* NÚT PHỤ — FB + YT ĐỘC LẬP */}
                   <div className="flex gap-2">
-                    {isAvailable ? (
-                      <a
-                        href={s.facebook}
-                        target="_blank"
-                        rel="noopener"
-                        className="flex-1 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 font-bold text-xs flex items-center justify-center gap-1.5 btn-tap hover:bg-blue-500/20 transition-colors"
-                      >
-                        <span className="font-black">f</span> Facebook
-                      </a>
-                    ) : isLocked ? (
+                    {isLocked ? (
                       <button
                         onClick={() => setShowNotice(true)}
                         className="flex-1 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5"
@@ -348,19 +408,34 @@ export default function MoviePage() {
                         🔒 Chờ giờ xem
                       </button>
                     ) : (
-                      <div className="flex-1 py-2.5 rounded-xl bg-[#151d2e] border border-[#1e293b] text-slate-500 text-xs font-bold flex items-center justify-center">
-                        Chưa có link
-                      </div>
-                    )}
-                    {isAvailable && s.youtube && (
-                      <a
-                        href={s.youtube}
-                        target="_blank"
-                        rel="noopener"
-                        className="flex-1 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 font-bold text-xs flex items-center justify-center gap-1.5 btn-tap hover:bg-red-500/20 transition-colors"
-                      >
-                        ▶ YouTube
-                      </a>
+                      <>
+                        {hasFb ? (
+                          <a
+                            href={s.facebook}
+                            target="_blank"
+                            rel="noopener"
+                            className="flex-1 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 font-bold text-xs flex items-center justify-center gap-1.5 btn-tap hover:bg-blue-500/20 transition-colors"
+                          >
+                            <span className="font-black">f</span> Facebook
+                          </a>
+                        ) : (
+                          !hasYt && (
+                            <div className="flex-1 py-2.5 rounded-xl bg-[#151d2e] border border-[#1e293b] text-slate-500 text-xs font-bold flex items-center justify-center">
+                              Chưa có link
+                            </div>
+                          )
+                        )}
+                        {hasYt && (
+                          <a
+                            href={s.youtube}
+                            target="_blank"
+                            rel="noopener"
+                            className="flex-1 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 font-bold text-xs flex items-center justify-center gap-1.5 btn-tap hover:bg-red-500/20 transition-colors"
+                          >
+                            ▶ YouTube
+                          </a>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
