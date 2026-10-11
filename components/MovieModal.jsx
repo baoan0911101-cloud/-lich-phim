@@ -10,7 +10,6 @@ const parseShowAt = (showAt) => {
   const dateStr = showAt.toString();
 
   // Trường hợp 1: PostgreSQL trả về ISO string "2026-10-11T12:25:00.000Z"
-  // → Cắt bỏ Z, .000 để lấy giờ "gốc" (đã là giờ VN khi lưu)
   if (dateStr.includes('T')) {
     const cleanStr = dateStr.replace('Z', '').replace(/\.\d{3}/, '');
     const [datePart, timePart] = cleanStr.split('T');
@@ -23,7 +22,6 @@ const parseShowAt = (showAt) => {
       day,
       month,
       year,
-      // Tạo Date object ở local time (không convert UTC)
       date: new Date(
         parseInt(year),
         parseInt(month) - 1,
@@ -56,7 +54,7 @@ const parseShowAt = (showAt) => {
     };
   }
 
-  // Fallback: thử parse bình thường
+  // Fallback
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;
 
@@ -105,13 +103,9 @@ export default function MovieModal({ movie, onClose }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  // 🎯 CHECK GIỜ XEM — Dùng hàm parse (không lệch timezone)
+  // 🎯 CHECK GIỜ XEM
   const showAtInfo = parseShowAt(movie.show_at);
-
-  const isTimeLocked = showAtInfo
-    ? showAtInfo.date > new Date()
-    : false;
-
+  const isTimeLocked = showAtInfo ? showAtInfo.date > new Date() : false;
   const showAtText = showAtInfo
     ? `${showAtInfo.hour}:${showAtInfo.minute} ${showAtInfo.day}/${showAtInfo.month}/${showAtInfo.year}`
     : '';
@@ -365,12 +359,18 @@ export default function MovieModal({ movie, onClose }) {
                 {movie.seasons?.length > 0 ? (
                   <div className="grid grid-cols-2 gap-2">
                     {movie.seasons.slice(0, 6).map((s, i) => {
-                      const isAvailable = !!s.facebook && !isTimeLocked;
-                      const isLocked = isTimeLocked && !!s.facebook;
+                      const hasFb = !!s.facebook;
+                      const hasYt = !!s.youtube;
+                      const hasAnyLink = hasFb || hasYt;
+                      const isAvailable = hasAnyLink && !isTimeLocked;
+                      const isLocked = isTimeLocked && hasAnyLink;
+
+                      // 🎯 Ưu tiên YouTube > Facebook
+                      const primaryLink = s.youtube || s.facebook;
                       const Wrapper = isAvailable ? 'a' : 'div';
                       const wrapperProps = isAvailable
                         ? {
-                            href: s.facebook,
+                            href: primaryLink,
                             target: '_blank',
                             rel: 'noopener noreferrer',
                           }
@@ -412,7 +412,11 @@ export default function MovieModal({ movie, onClose }) {
                             <div className="text-[9px] text-slate-500 truncate">
                               {isAvailable ? (
                                 <span className="text-emerald-400 font-bold">
-                                  ● Có thể xem
+                                  ● {hasYt && hasFb
+                                    ? 'Có YT + FB'
+                                    : hasYt
+                                    ? 'Có YouTube'
+                                    : 'Có Facebook'}
                                 </span>
                               ) : isLocked ? (
                                 <span className="text-amber-400 font-bold">
