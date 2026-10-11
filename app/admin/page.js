@@ -449,7 +449,7 @@ export default function AdminPage() {
       }
     }
 
-    // 🎯 Nếu có movie_id → fetch full movie info
+    // Fetch full movie info
     let fullMovie = null;
     let movieSeasons = [{ name: 'Phần 1', facebook: '', youtube: '' }];
     let movieLinks = [
@@ -1489,9 +1489,9 @@ export default function AdminPage() {
                     </button>
                   </div>
 
-                  {/* 📅 THÔNG TIN LỊCH CHIẾU */}
-                  <div className="card-bg rounded-2xl p-4 space-y-3">
-                    <h3 className="text-sm font-bold text-amber-400 mb-2">
+                  {/* 📅 THÔNG TIN LỊCH CHIẾU — CHỈ PHẦN NÀY THÊM */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-amber-400">
                       📅 Thông tin lịch chiếu
                     </h3>
 
@@ -1556,233 +1556,86 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* 🎬 THÔNG TIN PHIM */}
-                  <div className="card-bg rounded-2xl p-4 space-y-3">
-                    <h3 className="text-sm font-bold text-sky-400 mb-2">
-                      🎬 Thông tin phim
-                    </h3>
+                  <hr className="border-[#1e293b]" />
 
-                    <div>
-                      <label className={label}>Tên phim *</label>
-                      <input
-                        required
-                        value={editScheduleForm.title}
-                        onChange={(e) =>
-                          setEditScheduleForm({ ...editScheduleForm, title: e.target.value })
-                        }
-                        className={input}
-                        placeholder="VD: Quỷ Tiên Ô Đỏ"
-                      />
-                    </div>
+                  {/* 🎬 THÔNG TIN PHIM — DÙNG MovieForm, KHÔNG CARD */}
+                  <MovieForm
+                    movie={{
+                      title: editScheduleForm.title,
+                      title_goc: editScheduleForm.title_goc,
+                      poster: editScheduleForm.poster,
+                      season: editScheduleForm.season,
+                      duration: editScheduleForm.duration,
+                      tags: editScheduleForm.tags,
+                      overview: editScheduleForm.overview,
+                    }}
+                    setMovie={(newMovie) => {
+                      setEditScheduleForm({
+                        ...editScheduleForm,
+                        title: newMovie.title,
+                        title_goc: newMovie.title_goc,
+                        poster: newMovie.poster,
+                        season: newMovie.season,
+                        duration: newMovie.duration,
+                        tags: newMovie.tags,
+                        overview: newMovie.overview,
+                      });
+                    }}
+                    seasons={editSeasons}
+                    addSeason={() =>
+                      setEditSeasons([
+                        ...editSeasons,
+                        {
+                          name: `Phần ${editSeasons.length + 1}`,
+                          facebook: '',
+                          youtube: '',
+                        },
+                      ])
+                    }
+                    removeSeason={(i) =>
+                      setEditSeasons(editSeasons.filter((_, idx) => idx !== i))
+                    }
+                    updateSeason={(i, key, value) => {
+                      const newSeasons = [...editSeasons];
+                      newSeasons[i][key] = value;
+                      setEditSeasons(newSeasons);
+                    }}
+                    customLinks={editCustomLinks}
+                    addCustomLink={() =>
+                      setEditCustomLinks([
+                        ...editCustomLinks,
+                        { name: '', url: '', color: 'slate', icon: '' },
+                      ])
+                    }
+                    removeCustomLink={(i) =>
+                      setEditCustomLinks(editCustomLinks.filter((_, idx) => idx !== i))
+                    }
+                    updateCustomLink={(i, key, value) => {
+                      const newLinks = [...editCustomLinks];
+                      newLinks[i][key] = value;
+                      setEditCustomLinks(newLinks);
+                    }}
+                    toggleTag={(tag) => {
+                      const currentTags = editScheduleForm.tags
+                        .split(',')
+                        .map((t) => t.trim())
+                        .filter(Boolean);
 
-                    <div>
-                      <label className={label}>Tên gốc</label>
-                      <input
-                        value={editScheduleForm.title_goc}
-                        onChange={(e) =>
-                          setEditScheduleForm({ ...editScheduleForm, title_goc: e.target.value })
-                        }
-                        className={input}
-                        placeholder="Ta Chính Là Quỷ Tiên Đế"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={label}>Link ảnh poster *</label>
-                      <input
-                        required
-                        value={editScheduleForm.poster}
-                        onChange={(e) =>
-                          setEditScheduleForm({ ...editScheduleForm, poster: e.target.value })
-                        }
-                        className={input}
-                        placeholder="https://..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className={label}>Mùa</label>
-                      <input
-                        value={editScheduleForm.season}
-                        onChange={(e) =>
-                          setEditScheduleForm({ ...editScheduleForm, season: e.target.value })
-                        }
-                        className={input}
-                        placeholder="Mùa 9"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={label}>Thời lượng tổng</label>
-                      <input
-                        value={editScheduleForm.duration}
-                        onChange={(e) =>
-                          setEditScheduleForm({ ...editScheduleForm, duration: e.target.value })
-                        }
-                        className={input}
-                        placeholder="28h 48p"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={label}>Thể loại (cách nhau dấu phẩy)</label>
-                      <input
-                        value={editScheduleForm.tags}
-                        onChange={(e) =>
-                          setEditScheduleForm({ ...editScheduleForm, tags: e.target.value })
-                        }
-                        className={input}
-                        placeholder="Tu Tiên, Võ hiệp, Main Có Não"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={label}>Mô tả phim</label>
-                      <textarea
-                        value={editScheduleForm.overview}
-                        onChange={(e) =>
-                          setEditScheduleForm({ ...editScheduleForm, overview: e.target.value })
-                        }
-                        rows={3}
-                        className="w-full rounded-xl card-bg px-4 py-2 text-sm focus:outline-none focus:border-rose-400/50"
-                        placeholder="Nội dung phim..."
-                      />
-                    </div>
-
-                    <hr className="border-[#1e293b]" />
-
-                    {/* LINK LIÊN HỆ */}
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-bold text-sky-400">
-                        🔗 Link liên hệ ({editCustomLinks.length})
-                      </h4>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setEditCustomLinks([
-                            ...editCustomLinks,
-                            { name: '', url: '', color: 'slate', icon: '' },
-                          ])
-                        }
-                        className="text-xs px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 btn-tap"
-                      >
-                        + Thêm link
-                      </button>
-                    </div>
-
-                    {editCustomLinks.map((link, i) => (
-                      <div key={i} className="card-bg rounded-xl p-3 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <input
-                            value={link.name}
-                            onChange={(e) => {
-                              const newLinks = [...editCustomLinks];
-                              newLinks[i].name = e.target.value;
-                              setEditCustomLinks(newLinks);
-                            }}
-                            placeholder="Tên (VD: Vào nhóm Telegram...)"
-                            className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-sm font-bold"
-                          />
-                          {editCustomLinks.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setEditCustomLinks(
-                                  editCustomLinks.filter((_, idx) => idx !== i)
-                                )
-                              }
-                              className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap"
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                        <input
-                          value={link.url}
-                          onChange={(e) => {
-                            const newLinks = [...editCustomLinks];
-                            newLinks[i].url = e.target.value;
-                            setEditCustomLinks(newLinks);
-                          }}
-                          placeholder="https://..."
-                          className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
-                        />
-                      </div>
-                    ))}
-
-                    <hr className="border-[#1e293b]" />
-
-                    {/* DANH SÁCH TẬP */}
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-bold text-amber-400">
-                        🎞 Danh sách tập ({editSeasons.length})
-                      </h4>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setEditSeasons([
-                            ...editSeasons,
-                            {
-                              name: `Phần ${editSeasons.length + 1}`,
-                              facebook: '',
-                              youtube: '',
-                            },
-                          ])
-                        }
-                        className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 btn-tap"
-                      >
-                        + Thêm tập
-                      </button>
-                    </div>
-
-                    {editSeasons.map((s, i) => (
-                      <div key={i} className="card-bg rounded-xl p-3 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <input
-                            value={s.name}
-                            onChange={(e) => {
-                              const newSeasons = [...editSeasons];
-                              newSeasons[i].name = e.target.value;
-                              setEditSeasons(newSeasons);
-                            }}
-                            placeholder="Tên tập"
-                            className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-sm"
-                          />
-                          {editSeasons.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setEditSeasons(editSeasons.filter((_, idx) => idx !== i))
-                              }
-                              className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap"
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                        <input
-                          value={s.facebook}
-                          onChange={(e) => {
-                            const newSeasons = [...editSeasons];
-                            newSeasons[i].facebook = e.target.value;
-                            setEditSeasons(newSeasons);
-                          }}
-                          placeholder="Link Facebook"
-                          className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
-                        />
-                        <input
-                          value={s.youtube}
-                          onChange={(e) => {
-                            const newSeasons = [...editSeasons];
-                            newSeasons[i].youtube = e.target.value;
-                            setEditSeasons(newSeasons);
-                          }}
-                          placeholder="Link YouTube (nếu có)"
-                          className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
-                        />
-                      </div>
-                    ))}
-                  </div>
+                      if (currentTags.includes(tag)) {
+                        setEditScheduleForm({
+                          ...editScheduleForm,
+                          tags: currentTags.filter((t) => t !== tag).join(', '),
+                        });
+                      } else {
+                        setEditScheduleForm({
+                          ...editScheduleForm,
+                          tags: [...currentTags, tag].join(', '),
+                        });
+                      }
+                    }}
+                    input={input}
+                    label={label}
+                  />
 
                   <button
                     type="submit"
