@@ -367,7 +367,6 @@ export default function MovieModal({ movie, onClose }) {
                       const isAvailable = hasAnyLink && !isTimeLocked;
                       const isLocked = isTimeLocked && hasAnyLink;
 
-                      // 🎯 LOGIC MỚI
                       const hasBoth = hasFb && hasYt;
                       const singleLink = hasFb ? s.facebook : hasYt ? s.youtube : null;
 
@@ -492,29 +491,35 @@ export default function MovieModal({ movie, onClose }) {
         </div>
       </div>
 
-      {/* 🎯 POPUP CHỌN LINK */}
+      {/* 🎯 POPUP CHỌN LINK — CÓ ANIMATION */}
       {linkPicker && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm anim-fadeIn"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-[modalFadeIn_0.25s_ease_both]"
           onClick={(e) => {
             e.stopPropagation();
             setLinkPicker(null);
           }}
         >
           <div
-            className="card-bg rounded-2xl p-5 max-w-sm w-full anim-scaleIn"
+            className="card-bg rounded-2xl p-5 max-w-sm w-full animate-[modalScaleIn_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both] shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* HEADER với icon animation */}
             <div className="text-center mb-4">
-              <div className="text-4xl mb-2">🔗</div>
-              <h3 className="text-lg font-black text-white mb-1">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-rose-500/20 to-orange-500/20 border-2 border-rose-400/40 mb-3 animate-[iconBounce_0.6s_cubic-bezier(0.34,1.56,0.64,1)_both]">
+                <span className="text-3xl animate-[float_2s_ease-in-out_infinite]">
+                  🔗
+                </span>
+              </div>
+              <h3 className="text-lg font-black text-white mb-1 animate-[fadeInUp_0.5s_ease_0.15s_both]">
                 Chọn nơi xem
               </h3>
-              <p className="text-xs text-slate-400 line-clamp-1">
+              <p className="text-xs text-slate-400 line-clamp-1 animate-[fadeInUp_0.5s_ease_0.2s_both]">
                 {linkPicker.season.name}
               </p>
             </div>
 
+            {/* NÚT CHỌN LINK với stagger animation */}
             <div className="space-y-2">
               {linkPicker.season.facebook && (
                 <a
@@ -522,29 +527,38 @@ export default function MovieModal({ movie, onClose }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setLinkPicker(null)}
-                  className="block w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-sm flex items-center justify-center gap-2 btn-tap shadow-[0_4px_16px_rgba(59,130,246,0.4)]"
+                  className="group relative block w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-sm flex items-center justify-center gap-2 overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_24px_rgba(59,130,246,0.5)] active:scale-[0.98] animate-[slideInLeft_0.5s_cubic-bezier(0.34,1.56,0.64,1)_0.25s_both]"
                 >
-                  <span className="text-lg font-black">f</span>
-                  Xem trên Facebook
+                  {/* Shimmer effect */}
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                  <span className="text-lg font-black transition-transform duration-300 group-hover:scale-125">
+                    f
+                  </span>
+                  <span>Xem trên Facebook</span>
                 </a>
               )}
+
               {linkPicker.season.youtube && (
                 <a
                   href={linkPicker.season.youtube}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setLinkPicker(null)}
-                  className="block w-full py-3.5 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-sm flex items-center justify-center gap-2 btn-tap shadow-[0_4px_16px_rgba(239,68,68,0.4)]"
+                  className="group relative block w-full py-3.5 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-sm flex items-center justify-center gap-2 overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_24px_rgba(239,68,68,0.5)] active:scale-[0.98] animate-[slideInLeft_0.5s_cubic-bezier(0.34,1.56,0.64,1)_0.35s_both]"
                 >
-                  <span className="text-lg font-black">▶</span>
-                  Xem trên YouTube
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                  <span className="text-lg font-black transition-transform duration-300 group-hover:scale-125">
+                    ▶
+                  </span>
+                  <span>Xem trên YouTube</span>
                 </a>
               )}
             </div>
 
+            {/* NÚT HUỶ */}
             <button
               onClick={() => setLinkPicker(null)}
-              className="w-full mt-3 py-2.5 rounded-xl card-bg text-slate-300 font-bold text-sm btn-tap border border-[#1e293b] hover:border-rose-400/50 transition-colors"
+              className="w-full mt-3 py-2.5 rounded-xl card-bg text-slate-300 font-bold text-sm border border-[#1e293b] hover:border-rose-400/50 hover:text-rose-300 transition-all duration-300 active:scale-[0.97] animate-[fadeInUp_0.5s_ease_0.45s_both]"
             >
               Huỷ
             </button>
