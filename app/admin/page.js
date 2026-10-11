@@ -164,8 +164,7 @@ export default function AdminPage() {
   const [loginMsg, setLoginMsg] = useState('');
   const [tab, setTab] = useState('add');
   const [addMode, setAddMode] = useState('movie');
-  // 🎯 Tab con trong "Sửa"
-  const [editMode, setEditMode] = useState('movie'); // 'movie' | 'schedule'
+  const [editMode, setEditMode] = useState('movie');
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
@@ -221,11 +220,26 @@ export default function AdminPage() {
     date: '',
     movie_id: '',
     title: '',
+    title_goc: '',
     poster: '',
     season: '',
+    tags: '',
+    duration: '',
+    overview: '',
     status: 'Sắp chiếu',
     show_at: '',
   });
+  const [editSeasons, setEditSeasons] = useState([
+    { name: 'Phần 1', facebook: '', youtube: '' },
+  ]);
+  const [editCustomLinks, setEditCustomLinks] = useState([
+    {
+      name: 'Vào nhóm Telegram',
+      url: '',
+      color: 'sky',
+      icon: '/icons/telegram.png',
+    },
+  ]);
 
   const loadMovies = async () => {
     setLoadingMovies(true);
@@ -330,11 +344,24 @@ export default function AdminPage() {
       date: '',
       movie_id: '',
       title: '',
+      title_goc: '',
       poster: '',
       season: '',
+      tags: '',
+      duration: '',
+      overview: '',
       status: 'Sắp chiếu',
       show_at: '',
     });
+    setEditSeasons([{ name: 'Phần 1', facebook: '', youtube: '' }]);
+    setEditCustomLinks([
+      {
+        name: 'Vào nhóm Telegram',
+        url: '',
+        color: 'sky',
+        icon: '/icons/telegram.png',
+      },
+    ]);
     setEditingScheduleId(null);
     setMsg('');
   };
@@ -407,18 +434,57 @@ export default function AdminPage() {
   };
 
   // 🎯 Bắt đầu sửa LỊCH CHIẾU
-  const startEditSchedule = (item) => {
+  const startEditSchedule = async (item) => {
     setEditingScheduleId(item.id);
-    
-    // Parse show_at từ DB
+
+    // Parse show_at
     let showAtValue = '';
     if (item.show_at) {
       const dateStr = item.show_at.toString();
       if (dateStr.includes('T')) {
         const cleanStr = dateStr.replace('Z', '').replace(/\.\d{3}/, '');
-        showAtValue = cleanStr.slice(0, 16); // "2026-10-11T12:25"
+        showAtValue = cleanStr.slice(0, 16);
       } else if (dateStr.includes(' ')) {
         showAtValue = dateStr.replace(' ', 'T').slice(0, 16);
+      }
+    }
+
+    // 🎯 Nếu có movie_id → fetch full movie info
+    let fullMovie = null;
+    let movieSeasons = [{ name: 'Phần 1', facebook: '', youtube: '' }];
+    let movieLinks = [
+      {
+        name: 'Vào nhóm Telegram',
+        url: '',
+        color: 'sky',
+        icon: '/icons/telegram.png',
+      },
+    ];
+
+    if (item.movie_id) {
+      try {
+        const res = await fetch(`/api/movies/${item.movie_id}`);
+        if (res.ok) {
+          const data = await res.json();
+          fullMovie = data.movie;
+
+          if (fullMovie.seasons?.length) {
+            movieSeasons = fullMovie.seasons.map((s) => ({
+              name: s.name || '',
+              facebook: s.facebook || '',
+              youtube: s.youtube || '',
+            }));
+          }
+
+          if (fullMovie.custom_links?.length) {
+            movieLinks = fullMovie.custom_links.map((l) => ({
+              ...l,
+              icon: l.icon || '',
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi load movie:', err);
       }
     }
 
@@ -426,12 +492,19 @@ export default function AdminPage() {
       day: item.day || 'HÔM NAY',
       date: item.date || '',
       movie_id: item.movie_id || '',
-      title: item.title || '',
-      poster: item.poster || '',
-      season: item.season || '',
+      title: fullMovie?.title || item.title || '',
+      title_goc: fullMovie?.title_goc || '',
+      poster: fullMovie?.poster || item.poster || '',
+      season: fullMovie?.season || item.season || '',
+      tags: (fullMovie?.tags || []).join(', '),
+      duration: fullMovie?.total_duration || '',
+      overview: fullMovie?.overview || '',
       status: item.status || 'Sắp chiếu',
       show_at: showAtValue,
     });
+
+    setEditSeasons(movieSeasons);
+    setEditCustomLinks(movieLinks);
     setMsg('');
   };
 
@@ -529,7 +602,6 @@ export default function AdminPage() {
       .trim()
       .replace(/\s+/g, '-');
 
-  // 🎯 SUBMIT SỬA PHIM
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -605,6 +677,10 @@ export default function AdminPage() {
     setLoading(true);
     setMsg('');
 
+    const validLinks = editCustomLinks.filter(
+      (l) => l.name.trim() && l.url.trim()
+    );
+
     try {
       const res = await fetch('/api/schedule/update', {
         method: 'POST',
@@ -613,6 +689,8 @@ export default function AdminPage() {
           password,
           id: editingScheduleId,
           item: editScheduleForm,
+          seasons: editSeasons,
+          custom_links: validLinks,
         }),
       });
       const data = await res.json();
@@ -622,6 +700,7 @@ export default function AdminPage() {
         setTimeout(() => {
           resetEditScheduleForm();
           loadSchedule();
+          loadMovies();
         }, 1200);
       } else {
         setMsg('❌ Lỗi: ' + (data.error || 'Không rõ'));
@@ -816,7 +895,6 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* TABS CHÍNH */}
       <div className="flex gap-1.5 mb-6">
         <button
           onClick={() => {
@@ -854,9 +932,6 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* ═══════════════════════════════ */}
-      {/* TAB THÊM / LỊCH */}
-      {/* ═══════════════════════════════ */}
       {tab === 'add' && (
         <div>
           <div className="flex gap-2 mb-5 p-1 rounded-2xl card-bg">
@@ -1186,12 +1261,8 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ═══════════════════════════════ */}
-      {/* TAB SỬA */}
-      {/* ═══════════════════════════════ */}
       {tab === 'edit' && (
         <div>
-          {/* 🎯 TAB CON: Sửa phim / Sửa lịch */}
           <div className="flex gap-2 mb-5 p-1 rounded-2xl card-bg">
             <button
               onClick={() => {
@@ -1418,6 +1489,7 @@ export default function AdminPage() {
                     </button>
                   </div>
 
+                  {/* 📅 THÔNG TIN LỊCH CHIẾU */}
                   <div className="card-bg rounded-2xl p-4 space-y-3">
                     <h3 className="text-sm font-bold text-amber-400 mb-2">
                       📅 Thông tin lịch chiếu
@@ -1462,39 +1534,33 @@ export default function AdminPage() {
                       </div>
                     </div>
 
+                    <DateTimePicker24h
+                      value={editScheduleForm.show_at}
+                      onChange={(val) =>
+                        setEditScheduleForm({ ...editScheduleForm, show_at: val })
+                      }
+                      input={input}
+                      label={label}
+                    />
+
                     <div>
-                      <label className={label}>🎬 Chọn phim</label>
-                      <select
-                        value={editScheduleForm.movie_id || ''}
-                        onChange={(e) => {
-                          const movieId = e.target.value;
-                          if (!movieId) {
-                            setEditScheduleForm({
-                              ...editScheduleForm,
-                              movie_id: '',
-                            });
-                            return;
-                          }
-                          const m = movies.find((m) => m.id === movieId);
-                          if (!m) return;
-                          setEditScheduleForm({
-                            ...editScheduleForm,
-                            movie_id: movieId,
-                            title: m.title || '',
-                            poster: m.poster || '',
-                            season: m.season || '',
-                          });
-                        }}
+                      <label className={label}>Trạng thái</label>
+                      <input
+                        value={editScheduleForm.status}
+                        onChange={(e) =>
+                          setEditScheduleForm({ ...editScheduleForm, status: e.target.value })
+                        }
+                        placeholder="Sắp chiếu"
                         className={input}
-                      >
-                        <option value="">-- Không chọn --</option>
-                        {movies.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.title} {m.season ? `(${m.season})` : ''}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
+                  </div>
+
+                  {/* 🎬 THÔNG TIN PHIM */}
+                  <div className="card-bg rounded-2xl p-4 space-y-3">
+                    <h3 className="text-sm font-bold text-sky-400 mb-2">
+                      🎬 Thông tin phim
+                    </h3>
 
                     <div>
                       <label className={label}>Tên phim *</label>
@@ -1505,53 +1571,217 @@ export default function AdminPage() {
                           setEditScheduleForm({ ...editScheduleForm, title: e.target.value })
                         }
                         className={input}
+                        placeholder="VD: Quỷ Tiên Ô Đỏ"
                       />
                     </div>
 
                     <div>
-                      <label className={label}>Link ảnh poster</label>
+                      <label className={label}>Tên gốc</label>
                       <input
+                        value={editScheduleForm.title_goc}
+                        onChange={(e) =>
+                          setEditScheduleForm({ ...editScheduleForm, title_goc: e.target.value })
+                        }
+                        className={input}
+                        placeholder="Ta Chính Là Quỷ Tiên Đế"
+                      />
+                    </div>
+
+                    <div>
+                      <label className={label}>Link ảnh poster *</label>
+                      <input
+                        required
                         value={editScheduleForm.poster}
                         onChange={(e) =>
                           setEditScheduleForm({ ...editScheduleForm, poster: e.target.value })
                         }
                         className={input}
+                        placeholder="https://..."
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className={label}>Mùa</label>
-                        <input
-                          value={editScheduleForm.season}
-                          onChange={(e) =>
-                            setEditScheduleForm({ ...editScheduleForm, season: e.target.value })
-                          }
-                          placeholder="Mùa 9"
-                          className={input}
-                        />
-                      </div>
-                      <div>
-                        <label className={label}>Trạng thái</label>
-                        <input
-                          value={editScheduleForm.status}
-                          onChange={(e) =>
-                            setEditScheduleForm({ ...editScheduleForm, status: e.target.value })
-                          }
-                          placeholder="Sắp chiếu"
-                          className={input}
-                        />
-                      </div>
+                    <div>
+                      <label className={label}>Mùa</label>
+                      <input
+                        value={editScheduleForm.season}
+                        onChange={(e) =>
+                          setEditScheduleForm({ ...editScheduleForm, season: e.target.value })
+                        }
+                        className={input}
+                        placeholder="Mùa 9"
+                      />
                     </div>
 
-                    <DateTimePicker24h
-                      value={editScheduleForm.show_at}
-                      onChange={(val) =>
-                        setEditScheduleForm({ ...editScheduleForm, show_at: val })
-                      }
-                      input={input}
-                      label={label}
-                    />
+                    <div>
+                      <label className={label}>Thời lượng tổng</label>
+                      <input
+                        value={editScheduleForm.duration}
+                        onChange={(e) =>
+                          setEditScheduleForm({ ...editScheduleForm, duration: e.target.value })
+                        }
+                        className={input}
+                        placeholder="28h 48p"
+                      />
+                    </div>
+
+                    <div>
+                      <label className={label}>Thể loại (cách nhau dấu phẩy)</label>
+                      <input
+                        value={editScheduleForm.tags}
+                        onChange={(e) =>
+                          setEditScheduleForm({ ...editScheduleForm, tags: e.target.value })
+                        }
+                        className={input}
+                        placeholder="Tu Tiên, Võ hiệp, Main Có Não"
+                      />
+                    </div>
+
+                    <div>
+                      <label className={label}>Mô tả phim</label>
+                      <textarea
+                        value={editScheduleForm.overview}
+                        onChange={(e) =>
+                          setEditScheduleForm({ ...editScheduleForm, overview: e.target.value })
+                        }
+                        rows={3}
+                        className="w-full rounded-xl card-bg px-4 py-2 text-sm focus:outline-none focus:border-rose-400/50"
+                        placeholder="Nội dung phim..."
+                      />
+                    </div>
+
+                    <hr className="border-[#1e293b]" />
+
+                    {/* LINK LIÊN HỆ */}
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-bold text-sky-400">
+                        🔗 Link liên hệ ({editCustomLinks.length})
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditCustomLinks([
+                            ...editCustomLinks,
+                            { name: '', url: '', color: 'slate', icon: '' },
+                          ])
+                        }
+                        className="text-xs px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 btn-tap"
+                      >
+                        + Thêm link
+                      </button>
+                    </div>
+
+                    {editCustomLinks.map((link, i) => (
+                      <div key={i} className="card-bg rounded-xl p-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={link.name}
+                            onChange={(e) => {
+                              const newLinks = [...editCustomLinks];
+                              newLinks[i].name = e.target.value;
+                              setEditCustomLinks(newLinks);
+                            }}
+                            placeholder="Tên (VD: Vào nhóm Telegram...)"
+                            className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-sm font-bold"
+                          />
+                          {editCustomLinks.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditCustomLinks(
+                                  editCustomLinks.filter((_, idx) => idx !== i)
+                                )
+                              }
+                              className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          value={link.url}
+                          onChange={(e) => {
+                            const newLinks = [...editCustomLinks];
+                            newLinks[i].url = e.target.value;
+                            setEditCustomLinks(newLinks);
+                          }}
+                          placeholder="https://..."
+                          className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
+                        />
+                      </div>
+                    ))}
+
+                    <hr className="border-[#1e293b]" />
+
+                    {/* DANH SÁCH TẬP */}
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-bold text-amber-400">
+                        🎞 Danh sách tập ({editSeasons.length})
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditSeasons([
+                            ...editSeasons,
+                            {
+                              name: `Phần ${editSeasons.length + 1}`,
+                              facebook: '',
+                              youtube: '',
+                            },
+                          ])
+                        }
+                        className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 btn-tap"
+                      >
+                        + Thêm tập
+                      </button>
+                    </div>
+
+                    {editSeasons.map((s, i) => (
+                      <div key={i} className="card-bg rounded-xl p-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={s.name}
+                            onChange={(e) => {
+                              const newSeasons = [...editSeasons];
+                              newSeasons[i].name = e.target.value;
+                              setEditSeasons(newSeasons);
+                            }}
+                            placeholder="Tên tập"
+                            className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-sm"
+                          />
+                          {editSeasons.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditSeasons(editSeasons.filter((_, idx) => idx !== i))
+                              }
+                              className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          value={s.facebook}
+                          onChange={(e) => {
+                            const newSeasons = [...editSeasons];
+                            newSeasons[i].facebook = e.target.value;
+                            setEditSeasons(newSeasons);
+                          }}
+                          placeholder="Link Facebook"
+                          className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
+                        />
+                        <input
+                          value={s.youtube}
+                          onChange={(e) => {
+                            const newSeasons = [...editSeasons];
+                            newSeasons[i].youtube = e.target.value;
+                            setEditSeasons(newSeasons);
+                          }}
+                          placeholder="Link YouTube (nếu có)"
+                          className="w-full h-9 rounded-lg bg-black/30 px-3 text-xs"
+                        />
+                      </div>
+                    ))}
                   </div>
 
                   <button
@@ -1576,9 +1806,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ═══════════════════════════════ */}
-      {/* TAB XOÁ */}
-      {/* ═══════════════════════════════ */}
       {tab === 'manage' && (
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -1637,7 +1864,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Modal xoá */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 anim-fadeIn">
           <div className="card-bg rounded-2xl p-5 max-w-sm w-full anim-fadeInUp">
@@ -1677,7 +1903,7 @@ export default function AdminPage() {
 }
 
 // ═══════════════════════════════════════════
-// COMPONENT FORM PHIM (giữ nguyên)
+// COMPONENT FORM PHIM
 // ═══════════════════════════════════════════
 function MovieForm({
   movie,
@@ -1852,7 +2078,8 @@ function MovieForm({
                 className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-sm font-bold"
               />
               {customLinks.length > 1 && (
-                <button                  type="button"
+                <button
+                  type="button"
                   onClick={() => removeCustomLink(i)}
                   className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 btn-tap"
                 >
