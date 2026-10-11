@@ -413,10 +413,10 @@ export default function MovieModal({ movie, onClose }) {
                               {isAvailable ? (
                                 <span className="text-emerald-400 font-bold">
                                   ● {hasYt && hasFb
-                                    ? 'Có YT + FB'
-                                    : hasYt
-                                    ? 'Có YouTube'
-                                    : 'Có Facebook'}
+                                    ? 'Có FB + YT'
+                                    : hasFb
+                                    ? 'Có Facebook'
+                                    : 'Có YouTube'}
                                 </span>
                               ) : isLocked ? (
                                 <span className="text-amber-400 font-bold">
