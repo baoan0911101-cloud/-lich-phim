@@ -33,8 +33,7 @@ const GENRE_PRESETS = [
   'Xuyên Không', 'Hài Hước', 'Tình Cảm', 'Main Có Não', 'Nghịch tập',
   'Hệ Thống', 'Hiện Đại', 'Vô địch lưu', 'Xuyên Thư', 'Đô thị dị năng',
   'Trọng sinh', 'Fantasy', 'Kinh Dị', 'Mạt thế', 'Võng du',
-  'Học đường', 'Võ hiệp', 'Vô hạn lưu', '3D', '2D', 'Huyền huyễn',
-  'Chiến đấu', 'Dị giới',
+  'Học đường', 'Võ hiệp', 'Vô hạn lưu', '3D',
 ];
 
 // 📅 TÍNH NGÀY
