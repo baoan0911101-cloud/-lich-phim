@@ -34,7 +34,7 @@ const GENRE_PRESETS = [
   'Hệ Thống', 'Hiện Đại', 'Vô địch lưu', 'Xuyên Thư', 'Đô thị dị năng',
   'Trọng sinh', 'Fantasy', 'Kinh Dị', 'Mạt thế', 'Võng du',
   'Học đường', 'Võ hiệp', 'Vô hạn lưu', '3D','2D', 'Huyền huyễn',
-  'Chiến đấu', 'Dị giới', 'Nữ Chính', 
+  'Chiến đấu', 'Dị giới', 
 
 ];
 
