@@ -18,7 +18,7 @@ export default function ChatWidget() {
   const [floatingPos, setFloatingPos] = useState(null);
   const [panelSide, setPanelSide] = useState('right');
   
-  // 🎯 State lưu số người online thực tế
+  // State lưu số người online thực tế
   const [onlineCount, setOnlineCount] = useState(1);
 
   const messagesEndRef = useRef(null);
@@ -45,7 +45,7 @@ export default function ChatWidget() {
     }
   }, []);
 
-  // 🎯 Effect lấy số người online
+  // Lấy số người online
   useEffect(() => {
     const fetchOnline = () => {
       fetch('/api/online')
@@ -55,8 +55,7 @@ export default function ChatWidget() {
     };
     
     fetchOnline();
-    const interval = setInterval(fetchOnline, 30000); // 30 giây update 1 lần
-    
+    const interval = setInterval(fetchOnline, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -79,8 +78,15 @@ export default function ChatWidget() {
     const channel = pusher.subscribe('chat-global');
     const onNewMessage = (data) => {
       setMessages((prev) => {
+        // Kiểm tra xem tin nhắn này đã có trong danh sách chưa (tránh bị lặp)
         if (data?.id && prev.some((item) => item.id === data.id)) return prev;
-        return [...prev, data];
+        
+        // Xoá tin nhắn "tạm" nếu nội dung trùng khớp với tin nhắn thật vừa về
+        const withoutTemp = prev.filter(
+          (item) => !(item.id.toString().startsWith('temp_') && item.content === data.content && item.user_id === data.user_id)
+        );
+
+        return [...withoutTemp, data];
       });
     };
     channel.bind('new-message', onNewMessage);
@@ -163,6 +169,7 @@ export default function ChatWidget() {
     setIsOpen(true);
   };
 
+  // 🎯 HÀM GỬI TIN NHẮN (ĐÃ TỐI ƯU 0ms DELAY)
   const handleSend = async (e) => {
     e.preventDefault();
     const content = newMsg.trim();
@@ -170,18 +177,38 @@ export default function ChatWidget() {
 
     const replyName = replyTo?.name || null;
     const replyContent = replyTo?.content || null;
+    
+    // 1. Tạo tin nhắn "tạm" hiển thị ngay lên màn hình
+    const tempMessage = {
+      id: 'temp_' + Date.now(),
+      user_id: userId,
+      name: profile.name,
+      avatar: profile.avatar,
+      content: content,
+      reply_to_name: replyName,
+      reply_to_content: replyContent,
+      created_at: new Date().toISOString(),
+      isPending: true
+    };
+
+    // 2. Hiển thị lên UI ngay lập tức
+    setMessages((prev) => [...prev, tempMessage]);
     setNewMsg('');
     setReplyTo(null);
 
+    // 3. Chạy ngầm gửi API
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, content, replyToName: replyName, replyToContent: replyContent }),
       });
-      if (!response.ok) throw new Error('Không gửi được tin nhắn');
-    } catch {
+      if (!response.ok) throw new Error('Lỗi gửi');
+    } catch (error) {
+      // Nếu lỗi, xoá tin nhắn tạm và trả lại chữ
+      setMessages((prev) => prev.filter(m => m.id !== tempMessage.id));
       setNewMsg(content);
+      alert("Không thể gửi tin nhắn, vui lòng thử lại!");
     }
   };
 
@@ -299,7 +326,6 @@ export default function ChatWidget() {
                   </span>
                   <span className="text-xs font-semibold text-emerald-200">Toàn Web</span>
                 </div>
-                {/* 🎯 Đã đồng bộ số online thực tế */}
                 <span className="rounded-lg border border-emerald-300/15 bg-black/20 px-2 py-1 text-[10px] font-bold tabular-nums text-emerald-100">{onlineCount} thành viên</span>
               </div>
             </div>
@@ -315,21 +341,23 @@ export default function ChatWidget() {
               {messages.map((msg, i) => {
                 const isMe = msg.user_id === userId;
                 const userAvatar = isMe ? profile.avatar : (msg.avatar || '👤');
+                const isPending = msg.isPending;
+                
                 return (
-                  <div key={msg.id || `${msg.user_id || msg.name || 'msg'}-${msg.created_at || i}-${i}`} className={`group flex items-end gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`}>
+                  <div key={msg.id || i} className={`group flex items-end gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`}>
                     <div className={`mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border text-sm shadow-sm ${isMe ? 'border-emerald-300/20 bg-emerald-400/10' : 'border-white/[0.08] bg-gradient-to-br from-slate-700/80 to-slate-800/80'}`}>
                       {userAvatar}
                     </div>
                     <div className={`flex max-w-[78%] flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                       <div className="mb-1 flex items-center gap-2 px-1">
                         {!isMe && <span className="max-w-[150px] truncate text-[10px] font-semibold text-slate-400">{msg.name || 'Khách'}</span>}
-                        <span className="text-[9px] tabular-nums text-slate-600">
-                          {msg.created_at && !Number.isNaN(new Date(msg.created_at).getTime())
+                        <span className={`text-[9px] tabular-nums ${isPending ? 'text-amber-400 animate-pulse' : 'text-slate-600'}`}>
+                          {isPending ? 'Đang gửi...' : (msg.created_at && !Number.isNaN(new Date(msg.created_at).getTime())
                             ? new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-                            : ''}
+                            : '')}
                         </span>
                       </div>
-                      <div className={`relative whitespace-pre-wrap break-words rounded-[19px] px-3.5 py-2.5 text-[13px] leading-relaxed shadow-sm ${isMe ? 'rounded-br-md border border-emerald-300/20 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-950/30' : 'rounded-bl-md border border-white/[0.07] bg-gradient-to-br from-[#202b3b] to-[#172130] text-slate-100'}`}>
+                      <div className={`relative whitespace-pre-wrap break-words rounded-[19px] px-3.5 py-2.5 text-[13px] leading-relaxed shadow-sm ${isMe ? 'rounded-br-md border border-emerald-300/20 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-950/30' : 'rounded-bl-md border border-white/[0.07] bg-gradient-to-br from-[#202b3b] to-[#172130] text-slate-100'} ${isPending ? 'opacity-70' : ''}`}>
                         {msg.reply_to_name && (
                           <div className={`mb-2 rounded-lg border-l-2 px-2.5 py-1.5 text-[10px] ${isMe ? 'border-emerald-100/70 bg-black/10 text-emerald-50' : 'border-emerald-400 bg-emerald-400/[0.08] text-emerald-200'}`}>
                             <span className="block truncate font-bold">↳ {msg.reply_to_name}</span>
@@ -337,14 +365,16 @@ export default function ChatWidget() {
                           </div>
                         )}
                         {msg.content}
-                        <button
-                          onClick={() => setReplyTo({ name: msg.name || 'Khách', content: msg.content })}
-                          title="Trả lời tin nhắn"
-                          aria-label="Trả lời tin nhắn"
-                          className={`absolute top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg border border-white/10 bg-[#0b1220] text-slate-300 opacity-0 shadow-lg transition hover:bg-emerald-500 hover:text-white focus:opacity-100 group-hover:opacity-100 ${isMe ? '-left-9' : '-right-9'}`}
-                        >
-                          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 10 4 15l5 5" /><path d="M4 15h9a7 7 0 0 0 7-7V5" /></svg>
-                        </button>
+                        {!isPending && (
+                          <button
+                            onClick={() => setReplyTo({ name: msg.name || 'Khách', content: msg.content })}
+                            title="Trả lời tin nhắn"
+                            aria-label="Trả lời tin nhắn"
+                            className={`absolute top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg border border-white/10 bg-[#0b1220] text-slate-300 opacity-0 shadow-lg transition hover:bg-emerald-500 hover:text-white focus:opacity-100 group-hover:opacity-100 ${isMe ? '-left-9' : '-right-9'}`}
+                          >
+                            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 10 4 15l5 5" /><path d="M4 15h9a7 7 0 0 0 7-7V5" /></svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
