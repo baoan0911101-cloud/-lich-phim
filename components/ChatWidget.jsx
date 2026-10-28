@@ -11,13 +11,13 @@ export default function ChatWidget() {
   const [userId, setUserId] = useState('');
   const [profile, setProfile] = useState({ name: '', avatar: '👤' });
   const [showEditProfile, setShowEditProfile] = useState(false);
-  
-  // 🛡️ Cờ kiểm tra xem Pusher đã được cấu hình chưa
   const [isPusherReady, setIsPusherReady] = useState(true);
+
+  // State cho Reply
+  const [replyTo, setReplyTo] = useState(null);
 
   const messagesEndRef = useRef(null);
 
-  // Lấy hoặc tạo User ID
   useEffect(() => {
     let id = localStorage.getItem('chat_userId');
     if (!id) {
@@ -26,7 +26,6 @@ export default function ChatWidget() {
     }
     setUserId(id);
 
-    // Lấy profile từ localStorage nếu có
     const savedProfile = localStorage.getItem('chat_profile');
     if (savedProfile) {
       setProfile(JSON.parse(savedProfile));
@@ -35,22 +34,18 @@ export default function ChatWidget() {
     }
   }, []);
 
-  // Load tin nhắn cũ và kết nối Pusher
   useEffect(() => {
     if (!userId) return;
 
-    // 1. Load lịch sử
     fetch('/api/chat')
       .then(r => r.json())
       .then(d => setMessages(d.messages || []))
       .catch(() => {});
 
-    // 2. Kết nối Pusher (Có kiểm tra an toàn)
     const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
     const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
 
     if (!pusherKey) {
-      console.warn("⚠️ Cảnh báo: Chưa cấu hình NEXT_PUBLIC_PUSHER_KEY. Ẩn nút chat để bảo vệ web.");
       setIsPusherReady(false);
       return;
     }
@@ -58,7 +53,6 @@ export default function ChatWidget() {
     const pusher = new Pusher(pusherKey, {
       cluster: pusherCluster || 'ap1',
     });
-    
     const channel = pusher.subscribe('chat-global');
     
     channel.bind('new-message', (data) => {
@@ -68,7 +62,6 @@ export default function ChatWidget() {
     return () => pusher.unsubscribe('chat-global');
   }, [userId]);
 
-  // Auto scroll xuống cuối
   useEffect(() => {
     if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
@@ -79,11 +72,15 @@ export default function ChatWidget() {
 
     const content = newMsg;
     setNewMsg('');
-    await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, content })
-    });
+    setReplyTo(null); // Xoá trạng thái reply sau khi gửi
+    
+    try {
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, content })
+      });
+    } catch (err) {}
   };
 
   const handleSaveProfile = async (name, avatar) => {
@@ -97,72 +94,128 @@ export default function ChatWidget() {
     setShowEditProfile(false);
   };
 
-  // Nếu Pusher chưa sẵn sàng (thiếu Key) thì không hiển thị gì cả
   if (!isPusherReady) return null;
 
   return (
     <div className="fixed bottom-24 right-4 z-50">
-      {/* NÚT BẤM CHAT */}
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)} 
-          className="w-14 h-14 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-2xl flex items-center justify-center text-2xl btn-tap hover:scale-110 transition-transform"
+          className="w-14 h-14 rounded-full bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)] flex items-center justify-center text-2xl hover:scale-110 transition-transform"
         >
           💬
         </button>
       )}
 
-      {/* KHUNG CHAT */}
       {isOpen && (
-        <div className="w-80 h-[500px] bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden anim-fadeInUp">
+        <div className="w-[340px] h-[550px] bg-[#0a0f18] border border-white/5 rounded-2xl shadow-2xl flex flex-col overflow-hidden anim-fadeInUp">
+          
           {/* HEADER */}
-          <div className="bg-[#1e293b] p-3 flex items-center justify-between border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm shadow-lg">
-                {profile.avatar}
+          <div className="bg-[#111827] p-3 flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-lg shadow-sm">
+                  {profile.avatar}
+                </div>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-[#111827] rounded-full"></span>
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">{profile.name}</h3>
-                <button onClick={() => setShowEditProfile(true)} className="text-[10px] text-amber-400 hover:underline">
+                <h3 className="text-sm font-bold text-white leading-tight flex items-center gap-1">
+                  {profile.name}
+                </h3>
+                <button onClick={() => setShowEditProfile(true)} className="text-[10px] text-emerald-400 hover:underline">
                   Sửa hồ sơ
                 </button>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
+            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white text-lg transition-colors">✕</button>
+          </div>
+
+          {/* THÔNG BÁO TOÀN WEB */}
+          <div className="px-3 py-2 bg-[#0a0f18]">
+            <div className="w-full py-1.5 rounded-lg bg-emerald-900/30 border border-emerald-500/30 flex items-center justify-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[11px] font-medium text-emerald-400">Toàn Web (51)</span>
+            </div>
           </div>
 
           {/* TIN NHẮN */}
-          <div className="flex-1 p-3 overflow-y-auto no-scrollbar space-y-3">
+          <div className="flex-1 px-3 overflow-y-auto no-scrollbar space-y-4">
             {messages.map((msg, i) => {
               const isMe = msg.user_id === userId;
+              const userAvatar = isMe ? profile.avatar : (msg.avatar || '👤');
+              
               return (
                 <div key={i} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
-                  <div className="w-7 h-7 rounded-full bg-[#1e293b] flex items-center justify-center text-sm shrink-0">
-                    {msg.avatar}
+                  {/* Avatar */}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 border ${
+                    isMe ? 'bg-emerald-500/20 border-emerald-500/50' : 'bg-[#1e293b] border-white/10'
+                  }`}>
+                    {userAvatar}
                   </div>
-                  <div className={`max-w-[75%] ${isMe ? 'text-right' : 'text-left'}`}>
-                    {!isMe && <span className="text-[10px] text-slate-400 mb-0.5 block">{msg.name}</span>}
-                    <div className={`px-3 py-1.5 rounded-xl text-xs inline-block ${isMe ? 'bg-emerald-500 text-white rounded-tr-sm' : 'bg-[#1e293b] text-slate-200 rounded-tl-sm'}`}>
+                  
+                  {/* Nội dung */}
+                  <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
+                    {/* Tên + Giờ */}
+                    <div className="flex items-center gap-2 mb-1 px-1">
+                      {!isMe && <span className="text-[10px] text-slate-400 font-medium">{msg.name}</span>}
+                      <span className="text-[9px] text-slate-500">
+                        {new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+
+                    {/* Bong bóng chat */}
+                    <div 
+                      className={`px-3 py-2 text-[13px] leading-relaxed break-words whitespace-pre-wrap relative group ${
+                        isMe 
+                          ? 'bg-emerald-500 text-white rounded-2xl rounded-tr-sm shadow-[0_2px_10px_rgba(16,185,129,0.2)]' 
+                          : 'bg-[#1e293b] text-slate-200 rounded-2xl rounded-tl-sm'
+                      }`}
+                    >
                       {msg.content}
+                      
+                      {/* Nút trả lời (hiện khi hover) */}
+                      <button 
+                        onClick={() => setReplyTo({ name: msg.name, content: msg.content })}
+                        className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate-400 hover:text-white ${
+                          isMe ? '-left-8' : '-right-8'
+                        }`}
+                        title="Trả lời"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"/><polyline points="9 11 12 14 22 4"/></svg>
+                      </button>
                     </div>
                   </div>
                 </div>
               );
             })}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} className="h-2" />
           </div>
 
+          {/* THANH REPLY (Khi đang trả lời) */}
+          {replyTo && (
+            <div className="px-3 py-2 bg-[#111827] border-t border-white/5 flex items-center justify-between">
+              <div className="flex-1 min-w-0 border-l-2 border-emerald-500 pl-2">
+                <p className="text-[10px] text-emerald-400 font-bold truncate">Đang trả lời {replyTo.name}</p>
+                <p className="text-[11px] text-slate-400 truncate">{replyTo.content}</p>
+              </div>
+              <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-white p-1 ml-2">✕</button>
+            </div>
+          )}
+
           {/* Ô NHẬP TIN NHẮN */}
-          <form onSubmit={handleSend} className="p-2 bg-[#1e293b] flex gap-2">
+          <form onSubmit={handleSend} className="p-3 bg-[#111827] border-t border-white/5 flex gap-2 items-center">
             <input
               type="text"
               value={newMsg}
               onChange={(e) => setNewMsg(e.target.value)}
-              placeholder="Gửi tin nhắn..."
-              className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-xs text-white focus:outline-none"
+              placeholder="Gửi lời dạo (tối đa 150 ký tự)..."
+              maxLength={150}
+              className="flex-1 h-10 rounded-xl bg-[#0a0f18] border border-white/10 px-4 text-xs text-white focus:outline-none focus:border-emerald-500/50 transition-colors placeholder:text-slate-500"
             />
-            <button type="submit" className="w-9 h-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 btn-tap">
-              ➤
+            <button type="submit" className="h-10 px-4 rounded-xl bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-600 transition-colors shadow-[0_2px_10px_rgba(16,185,129,0.3)]">
+              <span>Gửi</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </form>
         </div>
