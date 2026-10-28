@@ -17,7 +17,9 @@ export default function ChatWidget() {
   const [replyTo, setReplyTo] = useState(null);
   const [floatingPos, setFloatingPos] = useState(null);
   const [panelSide, setPanelSide] = useState('right');
-  const [onlineCount] = useState(51);
+  
+  // 🎯 State lưu số người online thực tế
+  const [onlineCount, setOnlineCount] = useState(1);
 
   const messagesEndRef = useRef(null);
   const dragRef = useRef({ active: false, moved: false, startX: 0, startY: 0, left: 0, top: 0 });
@@ -41,6 +43,21 @@ export default function ChatWidget() {
     } catch {
       setProfile({ name: 'Khách #' + id.slice(-4), avatar: '👤' });
     }
+  }, []);
+
+  // 🎯 Effect lấy số người online
+  useEffect(() => {
+    const fetchOnline = () => {
+      fetch('/api/online')
+        .then((r) => r.json())
+        .then((d) => setOnlineCount(d.online || 1))
+        .catch(() => {});
+    };
+    
+    fetchOnline();
+    const interval = setInterval(fetchOnline, 30000); // 30 giây update 1 lần
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -135,14 +152,12 @@ export default function ChatWidget() {
         if (pos) localStorage.setItem('chat_widget_position', JSON.stringify(pos));
         return pos;
       });
-      // Prevent the click generated after a drag from opening the chat.
       window.setTimeout(() => { dragRef.current.moved = false; }, 0);
     }
   };
 
   const handleBubbleClick = () => {
     if (dragRef.current.moved) return;
-    // Mở khung chat sát mép gần nhất, không đặt đè lên tọa độ icon khiến panel bị tràn khỏi màn hình.
     const rect = bubbleRef.current?.getBoundingClientRect();
     setPanelSide(rect && rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right');
     setIsOpen(true);
@@ -284,6 +299,7 @@ export default function ChatWidget() {
                   </span>
                   <span className="text-xs font-semibold text-emerald-200">Toàn Web</span>
                 </div>
+                {/* 🎯 Đã đồng bộ số online thực tế */}
                 <span className="rounded-lg border border-emerald-300/15 bg-black/20 px-2 py-1 text-[10px] font-bold tabular-nums text-emerald-100">{onlineCount} thành viên</span>
               </div>
             </div>
