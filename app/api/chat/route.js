@@ -5,11 +5,11 @@ const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID,
   key: process.env.NEXT_PUBLIC_PUSHER_KEY,
   secret: process.env.PUSHER_SECRET,
-  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap1',
   useTLS: true
 });
 
-// Lấy lịch sử chat (50 tin nhắn gần nhất)
+// Lấy lịch sử chat
 export async function GET() {
   try {
     const res = await query(`
@@ -28,9 +28,18 @@ export async function GET() {
 export async function POST(request) {
   try {
     const { userId, content } = await request.json();
-    if (!userId || !content?.trim()) return Response.json({ error: 'Lỗi' }, { status: 400 });
+    if (!userId || !content?.trim()) return Response.json({ error: 'Dữ liệu trống' }, { status: 400 });
 
-    // Lưu vào DB
+    // 1. Kiểm tra user đã có trong DB chưa, nếu chưa thì tự tạo mới
+    const checkUser = await query('SELECT id FROM users WHERE id = $1', [userId]);
+    if (checkUser.rows.length === 0) {
+      await query(
+        'INSERT INTO users (id, name, avatar) VALUES ($1, $2, $3)',
+        [userId, 'Khách #' + userId.slice(-4), '👤']
+      );
+    }
+
+    // 2. Lưu tin nhắn vào DB
     const res = await query(
       `INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING id, created_at`,
       [userId, content]
@@ -48,11 +57,12 @@ export async function POST(request) {
       avatar: user?.avatar || '👤'
     };
 
-    // Bắn realtime qua Pusher
+    // 3. Bắn realtime qua Pusher để người khác thấy ngay
     await pusher.trigger('chat-global', 'new-message', newMessage);
 
     return Response.json({ success: true, message: newMessage });
   } catch (err) {
+    console.error("Lỗi API Chat:", err);
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
