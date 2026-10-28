@@ -42,25 +42,37 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (liked) return; // Đã tim rồi thì không làm gì nữa (hoặc bạn có thể code toggle để bỏ tim)
+    const isUnliking = liked; // Kiểm tra xem đang gỡ tim hay thả tim
+    const newLikedState = !liked;
+    const newCount = isUnliking ? Math.max(likeCount - 1, 0) : likeCount + 1;
 
     // 1. Cập nhật UI ngay lập tức (Optimistic UI)
-    setLiked(true);
-    setLikeCount((prev) => prev + 1);
+    setLiked(newLikedState);
+    setLikeCount(newCount);
 
-    // 2. Lưu vào localStorage để user không bấm lại được
+    // 2. Cập nhật localStorage
     const savedLikes = JSON.parse(localStorage.getItem('likedMovies') || '[]');
-    localStorage.setItem('likedMovies', JSON.stringify([...savedLikes, movie.id]));
+    let newSavedLikes;
+    
+    if (isUnliking) {
+      newSavedLikes = savedLikes.filter((id) => id !== movie.id);
+    } else {
+      newSavedLikes = [...savedLikes, movie.id];
+    }
+    localStorage.setItem('likedMovies', JSON.stringify(newSavedLikes));
 
-    // 3. Gọi API lưu vào Database
+    // 3. Gọi API báo lên Database (like hoặc unlike)
     try {
       await fetch('/api/movies/like', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: movie.id }),
+        body: JSON.stringify({ 
+          id: movie.id, 
+          action: isUnliking ? 'unlike' : 'like'
+        }),
       });
     } catch (err) {
-      console.error('Lỗi khi thả tim:', err);
+      console.error('Lỗi khi thả/gỡ tim:', err);
     }
   };
 
