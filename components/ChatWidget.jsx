@@ -12,6 +12,9 @@ export default function ChatWidget() {
   const [profile, setProfile] = useState({ name: '', avatar: '👤' });
   const [showEditProfile, setShowEditProfile] = useState(false);
   
+  // 🛡️ Cờ kiểm tra xem Pusher đã được cấu hình chưa
+  const [isPusherReady, setIsPusherReady] = useState(true);
+
   const messagesEndRef = useRef(null);
 
   // Lấy hoặc tạo User ID
@@ -37,12 +40,25 @@ export default function ChatWidget() {
     if (!userId) return;
 
     // 1. Load lịch sử
-    fetch('/api/chat').then(r => r.json()).then(d => setMessages(d.messages || []));
+    fetch('/api/chat')
+      .then(r => r.json())
+      .then(d => setMessages(d.messages || []))
+      .catch(() => {});
 
-    // 2. Kết nối Pusher
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+    // 2. Kết nối Pusher (Có kiểm tra an toàn)
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+
+    if (!pusherKey) {
+      console.warn("⚠️ Cảnh báo: Chưa cấu hình NEXT_PUBLIC_PUSHER_KEY. Ẩn nút chat để bảo vệ web.");
+      setIsPusherReady(false);
+      return;
+    }
+
+    const pusher = new Pusher(pusherKey, {
+      cluster: pusherCluster || 'ap1',
     });
+    
     const channel = pusher.subscribe('chat-global');
     
     channel.bind('new-message', (data) => {
@@ -81,11 +97,17 @@ export default function ChatWidget() {
     setShowEditProfile(false);
   };
 
+  // Nếu Pusher chưa sẵn sàng (thiếu Key) thì không hiển thị gì cả
+  if (!isPusherReady) return null;
+
   return (
     <div className="fixed bottom-24 right-4 z-50">
       {/* NÚT BẤM CHAT */}
       {!isOpen && (
-        <button onClick={() => setIsOpen(true)} className="w-14 h-14 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-2xl flex items-center justify-center text-2xl btn-tap hover:scale-110 transition-transform">
+        <button 
+          onClick={() => setIsOpen(true)} 
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-2xl flex items-center justify-center text-2xl btn-tap hover:scale-110 transition-transform"
+        >
           💬
         </button>
       )}
@@ -96,10 +118,14 @@ export default function ChatWidget() {
           {/* HEADER */}
           <div className="bg-[#1e293b] p-3 flex items-center justify-between border-b border-white/10">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm shadow-lg">{profile.avatar}</div>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm shadow-lg">
+                {profile.avatar}
+              </div>
               <div>
                 <h3 className="text-sm font-bold text-white">{profile.name}</h3>
-                <button onClick={() => setShowEditProfile(true)} className="text-[10px] text-amber-400 hover:underline">Sửa hồ sơ</button>
+                <button onClick={() => setShowEditProfile(true)} className="text-[10px] text-amber-400 hover:underline">
+                  Sửa hồ sơ
+                </button>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
@@ -111,7 +137,9 @@ export default function ChatWidget() {
               const isMe = msg.user_id === userId;
               return (
                 <div key={i} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
-                  <div className="w-7 h-7 rounded-full bg-[#1e293b] flex items-center justify-center text-sm shrink-0">{msg.avatar}</div>
+                  <div className="w-7 h-7 rounded-full bg-[#1e293b] flex items-center justify-center text-sm shrink-0">
+                    {msg.avatar}
+                  </div>
                   <div className={`max-w-[75%] ${isMe ? 'text-right' : 'text-left'}`}>
                     {!isMe && <span className="text-[10px] text-slate-400 mb-0.5 block">{msg.name}</span>}
                     <div className={`px-3 py-1.5 rounded-xl text-xs inline-block ${isMe ? 'bg-emerald-500 text-white rounded-tr-sm' : 'bg-[#1e293b] text-slate-200 rounded-tl-sm'}`}>
@@ -140,7 +168,7 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* MODAL SỬA PROFILE (Giống ảnh 1) */}
+      {/* MODAL SỬA PROFILE */}
       {showEditProfile && (
         <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#0f172a] rounded-2xl w-full max-w-sm p-5 border border-white/10 shadow-2xl anim-scaleIn">
