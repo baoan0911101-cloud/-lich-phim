@@ -2,6 +2,7 @@
 import './globals.css';
 import TopHeader from '@/components/TopHeader';
 import BottomNav from '@/components/BottomNav';
+import ChatWidget from '@/components/ChatWidget'; // 🎯 Thêm import ChatWidget
 import { useEffect } from 'react';
 
 // Component phụ để xử lý logic ping online
@@ -48,6 +49,9 @@ export default function RootLayout({ children }) {
           <main>{children}</main>
         </div>
         <BottomNav />
+        
+        {/* Gọi component Chat (Nút chat sẽ nổi ở góc phải dưới) */}
+        <ChatWidget />
       </body>
     </html>
   );
