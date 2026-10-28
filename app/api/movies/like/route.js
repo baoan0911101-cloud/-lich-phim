@@ -2,14 +2,23 @@ import { query } from '@/lib/db';
 
 export async function POST(request) {
   try {
-    const { id } = await request.json();
+    const { id, action } = await request.json();
     if (!id) return Response.json({ error: 'Thiếu ID' }, { status: 400 });
 
-    // Tăng 1 lượt tim
-    const result = await query(
-      'UPDATE movies SET likes = COALESCE(likes, 0) + 1 WHERE id = $1 RETURNING likes',
-      [id]
-    );
+    let result;
+    if (action === 'unlike') {
+      // Nếu là bỏ tim, trừ đi 1 (nhưng không cho âm)
+      result = await query(
+        'UPDATE movies SET likes = GREATEST(COALESCE(likes, 0) - 1, 0) WHERE id = $1 RETURNING likes',
+        [id]
+      );
+    } else {
+      // Mặc định là thêm tim, cộng 1
+      result = await query(
+        'UPDATE movies SET likes = COALESCE(likes, 0) + 1 WHERE id = $1 RETURNING likes',
+        [id]
+      );
+    }
 
     if (result.rows.length === 0) return Response.json({ error: 'Không tìm thấy phim' }, { status: 404 });
 
