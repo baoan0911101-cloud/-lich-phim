@@ -16,6 +16,7 @@ export default function ChatWidget() {
   const [isPusherReady, setIsPusherReady] = useState(true);
   const [replyTo, setReplyTo] = useState(null);
   const [floatingPos, setFloatingPos] = useState(null);
+  const [panelSide, setPanelSide] = useState('right');
   const [onlineCount] = useState(51);
 
   const messagesEndRef = useRef(null);
@@ -141,6 +142,9 @@ export default function ChatWidget() {
 
   const handleBubbleClick = () => {
     if (dragRef.current.moved) return;
+    // Mở khung chat sát mép gần nhất, không đặt đè lên tọa độ icon khiến panel bị tràn khỏi màn hình.
+    const rect = bubbleRef.current?.getBoundingClientRect();
+    setPanelSide(rect && rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right');
     setIsOpen(true);
   };
 
@@ -217,8 +221,10 @@ export default function ChatWidget() {
       `}</style>
 
       <div
-        className={`fixed z-[90] ${floatingPos ? '' : 'bottom-6 right-5'}`}
-        style={positionStyle}
+        className={isOpen
+          ? `fixed z-[90] bottom-3 sm:bottom-5 ${panelSide === 'left' ? 'left-3 sm:left-5' : 'right-3 sm:right-5'}`
+          : `fixed z-[90] ${floatingPos ? '' : 'bottom-6 right-5'}`}
+        style={isOpen ? undefined : positionStyle}
       >
         {!isOpen && (
           <button
@@ -246,7 +252,7 @@ export default function ChatWidget() {
         )}
 
         {isOpen && (
-          <section className="chat-widget-panel flex h-[min(610px,calc(100dvh-32px))] w-[min(370px,calc(100vw-24px))] flex-col overflow-hidden rounded-[26px] border border-white/[0.12] bg-[#080d16]/95 text-white shadow-[0_24px_90px_rgba(0,0,0,.65)] ring-1 ring-black/30 backdrop-blur-2xl">
+          <section className="chat-widget-panel flex h-[min(610px,calc(100dvh-24px))] w-[min(370px,calc(100vw-24px))] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-[26px] border border-white/[0.12] bg-[#080d16]/95 text-white shadow-[0_24px_90px_rgba(0,0,0,.65)] ring-1 ring-black/30 backdrop-blur-2xl">
             <header className="relative overflow-hidden border-b border-white/[0.08] bg-gradient-to-br from-[#152a2a] via-[#101b29] to-[#101522] px-4 pb-3 pt-4">
               <div className="pointer-events-none absolute -right-8 -top-12 h-32 w-32 rounded-full bg-emerald-400/10 blur-3xl" />
               <div className="relative flex items-center gap-3">
