@@ -9,13 +9,23 @@ export default function MovieCard({ movie, index = 0, onClick }) {
   const [isHover, setIsHover] = useState(false);
   const cardRef = useRef(null);
 
-  // Load trạng thái đã thả tim từ localStorage
+  // Đọc trạng thái "Đã lưu" từ localStorage
   useEffect(() => {
-    const savedLikes = JSON.parse(localStorage.getItem('likedMovies') || '[]');
-    setLiked(savedLikes.includes(movie.id));
+    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    setLiked(saved.includes(movie.id));
   }, [movie.id]);
 
-  // Đồng bộ số lượt tim nếu props movie thay đổi (ví dụ load lại trang)
+  // Lắng nghe sự kiện thay đổi (nếu có thay đổi từ nơi khác)
+  useEffect(() => {
+    const handleChange = () => {
+      const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+      setLiked(saved.includes(movie.id));
+    };
+    window.addEventListener('savedMoviesChanged', handleChange);
+    return () => window.removeEventListener('savedMoviesChanged', handleChange);
+  }, [movie.id]);
+
+  // Đồng bộ số lượt tim nếu props movie thay đổi
   useEffect(() => {
     setLikeCount(movie.likes || 0);
   }, [movie.likes]);
@@ -42,7 +52,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     e.preventDefault();
     e.stopPropagation();
 
-    const isUnliking = liked; // Kiểm tra xem đang gỡ tim hay thả tim
+    const isUnliking = liked; // Nếu đang liked mà bấm -> là gỡ (unlike)
     const newLikedState = !liked;
     const newCount = isUnliking ? Math.max(likeCount - 1, 0) : likeCount + 1;
 
@@ -50,18 +60,21 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     setLiked(newLikedState);
     setLikeCount(newCount);
 
-    // 2. Cập nhật localStorage
-    const savedLikes = JSON.parse(localStorage.getItem('likedMovies') || '[]');
-    let newSavedLikes;
+    // 2. Cập nhật danh sách "Đã lưu" (savedMovies) trong localStorage
+    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    let newSaved;
     
     if (isUnliking) {
-      newSavedLikes = savedLikes.filter((id) => id !== movie.id);
+      newSaved = saved.filter((id) => id !== movie.id);
     } else {
-      newSavedLikes = [...savedLikes, movie.id];
+      newSaved = [...saved, movie.id];
     }
-    localStorage.setItem('likedMovies', JSON.stringify(newSavedLikes));
+    localStorage.setItem('savedMovies', JSON.stringify(newSaved));
+    
+    // Báo hiệu cho toàn bộ web biết danh sách Đã lưu vừa thay đổi
+    window.dispatchEvent(new Event('savedMoviesChanged'));
 
-    // 3. Gọi API báo lên Database (like hoặc unlike)
+    // 3. Gọi API lưu vào Database (cộng/trừ lượt tim)
     try {
       await fetch('/api/movies/like', {
         method: 'POST',
@@ -72,7 +85,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
         }),
       });
     } catch (err) {
-      console.error('Lỗi khi thả/gỡ tim:', err);
+      console.error('Lỗi khi cập nhật lượt tim:', err);
     }
   };
 
@@ -130,10 +143,10 @@ export default function MovieCard({ movie, index = 0, onClick }) {
           </div>
         )}
 
-        {/* NÚT THẢ TIM CÓ SỐ ĐẾM */}
+        {/* NÚT THẢ TIM */}
         <button
           onClick={toggleLike}
-          aria-label="Yêu thích phim"
+          aria-label="Lưu phim"
           className="absolute top-1 right-1 z-20 h-6 px-1.5 rounded-full flex items-center gap-1 bg-black/60 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
         >
           <svg
