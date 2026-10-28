@@ -29,6 +29,8 @@ export async function GET() {
 
     const movies = moviesResult.rows.map((m) => ({
       ...m,
+      // Đảm bảo nếu DB cũ chưa có cột likes thì nó trả về 0 thay vì null
+      likes: m.likes || 0, 
       seasons: seasonsByMovie[m.id] || [],
     }));
 
@@ -52,9 +54,10 @@ export async function POST(request) {
       return Response.json({ error: 'Thiếu thông tin' }, { status: 400 });
     }
 
+    // 🎯 Đã thêm cột likes vào lệnh INSERT (mặc định là 0)
     await query(
-      `INSERT INTO movies (id, title, title_goc, poster, season, tags, total_duration, overview, custom_links, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+      `INSERT INTO movies (id, title, title_goc, poster, season, tags, total_duration, overview, custom_links, likes, status, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())`,
       [
         movie.id,
         movie.title,
@@ -65,6 +68,7 @@ export async function POST(request) {
         movie.total_duration || null,
         movie.overview || null,
         JSON.stringify(movie.custom_links || []),
+        0, // Số lượt tim mặc định khi tạo mới
         'HÔM NAY',
       ]
     );
