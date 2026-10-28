@@ -5,22 +5,20 @@ import { formatRelativeDate, formatFullDate, getDateBadgeColor } from '@/lib/for
 export default function MovieCard({ movie, index = 0, onClick }) {
   const delay = Math.min(index * 0.05, 0.4);
   const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(movie.likes || 0);
   const [isHover, setIsHover] = useState(false);
   const cardRef = useRef(null);
 
+  // Load trạng thái đã thả tim từ localStorage
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-    setLiked(saved.includes(movie.id));
+    const savedLikes = JSON.parse(localStorage.getItem('likedMovies') || '[]');
+    setLiked(savedLikes.includes(movie.id));
   }, [movie.id]);
 
+  // Đồng bộ số lượt tim nếu props movie thay đổi (ví dụ load lại trang)
   useEffect(() => {
-    const handleChange = () => {
-      const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-      setLiked(saved.includes(movie.id));
-    };
-    window.addEventListener('savedMoviesChanged', handleChange);
-    return () => window.removeEventListener('savedMoviesChanged', handleChange);
-  }, [movie.id]);
+    setLikeCount(movie.likes || 0);
+  }, [movie.likes]);
 
   const handleMouseMove = (e) => {
     const card = cardRef.current;
@@ -40,23 +38,30 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     card.style.setProperty('--ry', '0deg');
   };
 
-  const toggleLike = (e) => {
+  const toggleLike = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-    let newSaved;
+    if (liked) return; // Đã tim rồi thì không làm gì nữa (hoặc bạn có thể code toggle để bỏ tim)
 
-    if (saved.includes(movie.id)) {
-      newSaved = saved.filter((id) => id !== movie.id);
-      setLiked(false);
-    } else {
-      newSaved = [...saved, movie.id];
-      setLiked(true);
+    // 1. Cập nhật UI ngay lập tức (Optimistic UI)
+    setLiked(true);
+    setLikeCount((prev) => prev + 1);
+
+    // 2. Lưu vào localStorage để user không bấm lại được
+    const savedLikes = JSON.parse(localStorage.getItem('likedMovies') || '[]');
+    localStorage.setItem('likedMovies', JSON.stringify([...savedLikes, movie.id]));
+
+    // 3. Gọi API lưu vào Database
+    try {
+      await fetch('/api/movies/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: movie.id }),
+      });
+    } catch (err) {
+      console.error('Lỗi khi thả tim:', err);
     }
-
-    localStorage.setItem('savedMovies', JSON.stringify(newSaved));
-    window.dispatchEvent(new Event('savedMoviesChanged'));
   };
 
   const handleCardClick = (e) => {
@@ -65,6 +70,9 @@ export default function MovieCard({ movie, index = 0, onClick }) {
   };
 
   const dateColor = getDateBadgeColor(movie.updated_at || movie.created_at);
+
+  // Format số lượt tim (VD: 1200 -> 1.2k)
+  const displayLikeCount = likeCount > 999 ? (likeCount / 1000).toFixed(1) + 'k' : likeCount;
 
   return (
     <div
@@ -110,11 +118,11 @@ export default function MovieCard({ movie, index = 0, onClick }) {
           </div>
         )}
 
+        {/* NÚT THẢ TIM CÓ SỐ ĐẾM */}
         <button
           onClick={toggleLike}
-          aria-label="Lưu phim"
-          className="absolute top-1 right-1 z-20 w-6 h-6 rounded-full flex items-center justify-center bg-black/50 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
-          style={{ padding: 0 }}
+          aria-label="Yêu thích phim"
+          className="absolute top-1 right-1 z-20 h-6 px-1.5 rounded-full flex items-center gap-1 bg-black/60 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
         >
           <svg
             width="11"
@@ -132,6 +140,9 @@ export default function MovieCard({ movie, index = 0, onClick }) {
           >
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
           </svg>
+          <span className="text-[9px] font-bold text-white pr-0.5">
+            {displayLikeCount}
+          </span>
         </button>
       </div>
 
