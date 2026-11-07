@@ -8,19 +8,15 @@ export default function MovieCard({ movie, index = 0, onClick }) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(movie.likes || 0);
   const [isHover, setIsHover] = useState(false);
-  
-  // 🎯 State kiểm tra ảnh đã tải xong chưa để ẩn Skeleton
   const [isImgLoaded, setIsImgLoaded] = useState(false);
   
   const cardRef = useRef(null);
 
-  // Đọc trạng thái "Đã lưu" từ localStorage
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
     setLiked(saved.includes(movie.id));
   }, [movie.id]);
 
-  // Lắng nghe sự kiện thay đổi
   useEffect(() => {
     const handleChange = () => {
       const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
@@ -30,28 +26,11 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     return () => window.removeEventListener('savedMoviesChanged', handleChange);
   }, [movie.id]);
 
-  // Đồng bộ số lượt tim
   useEffect(() => {
     setLikeCount(movie.likes || 0);
   }, [movie.likes]);
 
-  const handleMouseMove = (e) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    card.style.setProperty('--rx', `${y * 6}deg`);
-    card.style.setProperty('--ry', `${-x * 6}deg`);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHover(false);
-    const card = cardRef.current;
-    if (!card) return;
-    card.style.setProperty('--rx', '0deg');
-    card.style.setProperty('--ry', '0deg');
-  };
+  // 🎯 BỎ HÀM handleMouseMove (Không còn xoay 3D để chống lag)
 
   const toggleLike = async (e) => {
     e.preventDefault();
@@ -102,38 +81,28 @@ export default function MovieCard({ movie, index = 0, onClick }) {
       className="block anim-fadeInUp group cursor-pointer"
       style={{ animationDelay: `${delay}s` }}
       onMouseEnter={() => setIsHover(true)}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setIsHover(false)}
       onClick={handleCardClick}
     >
       {/* ẢNH */}
       <div
         ref={cardRef}
-        className="relative aspect-[2/3] md:aspect-[16/9] rounded-xl overflow-hidden bg-[#151d2e] transition-all duration-500"
-        style={{
-          transform: isHover
-            ? 'perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-3px) scale(1.02)'
-            : 'perspective(800px) rotateX(0) rotateY(0) translateY(0) scale(1)',
-          transformStyle: 'preserve-3d',
-          willChange: 'transform', // 🎯 Giữ lại để tối ưu render
-          boxShadow: isHover
-            ? '0 15px 30px rgba(0,0,0,0.6), 0 0 15px rgba(251,113,133,0.3)' // 🎯 Đã khôi phục bóng đổ gốc
-            : '0 4px 12px rgba(0,0,0,0.3)',
-        }}
+        // 🎯 Chỉ dùng scale để nở ra, bỏ translateY để không bị giật khi lướt
+        className={`relative aspect-[2/3] md:aspect-[16/9] rounded-xl overflow-hidden bg-[#151d2e] transition-all duration-300 ease-out ${
+          isHover ? 'scale-[1.03] shadow-[0_10px_30px_rgba(0,0,0,0.6)] z-10' : 'scale-100 shadow-md z-0'
+        }`}
       >
-        {/* 🎯 KHUNG SKELETON (Hiện khi ảnh chưa tải xong) */}
         {!isImgLoaded && (
           <div className="absolute inset-0 bg-[#1e293b] animate-pulse z-0" />
         )}
 
-        {/* 🎯 NEXT/IMAGE (Tự động nén ảnh, tối ưu tốc độ) */}
         <Image
           src={movie.poster || 'https://placehold.co/300x450/151d2e/475569?text=No+Image'} 
           alt={movie.title}
           fill
           sizes="(max-width: 768px) 33vw, 300px"
           onLoad={() => setIsImgLoaded(true)}
-          className={`object-cover transition-all duration-700 group-hover:scale-110 z-10 ${
+          className={`object-cover transition-transform duration-500 group-hover:scale-110 z-10 ${
             isImgLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'
           }`}
         />
@@ -152,7 +121,6 @@ export default function MovieCard({ movie, index = 0, onClick }) {
           </div>
         )}
 
-        {/* NÚT THẢ TIM */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
