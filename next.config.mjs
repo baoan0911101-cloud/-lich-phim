@@ -1,16 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  compress: true, // 🎯 Bật nén Gzip
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**', // Cho phép tải ảnh từ bất kỳ trang web nào
-      },
-      {
-        protocol: 'http',
-        hostname: '**', // Phòng trường hợp link ảnh là http
-      }
-    ],
+    formats: ['image/avif', 'image/webp'], // 🎯 Tự động chuyển sang ảnh siêu nhẹ
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
   },
 };
 
