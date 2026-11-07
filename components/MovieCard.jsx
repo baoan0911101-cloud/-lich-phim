@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image'; // 🎯 Import Image của Next.js
+import Image from 'next/image';
 import { formatRelativeDate, formatFullDate, getDateBadgeColor } from '@/lib/formatDate';
 
 export default function MovieCard({ movie, index = 0, onClick }) {
@@ -115,8 +115,9 @@ export default function MovieCard({ movie, index = 0, onClick }) {
             ? 'perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-3px) scale(1.02)'
             : 'perspective(800px) rotateX(0) rotateY(0) translateY(0) scale(1)',
           transformStyle: 'preserve-3d',
+          willChange: 'transform', // 🎯 Giữ lại để tối ưu render
           boxShadow: isHover
-            ? '0 15px 30px rgba(0,0,0,0.6), 0 0 15px rgba(251,113,133,0.3)'
+            ? '0 15px 30px rgba(0,0,0,0.6), 0 0 15px rgba(251,113,133,0.3)' // 🎯 Đã khôi phục bóng đổ gốc
             : '0 4px 12px rgba(0,0,0,0.3)',
         }}
       >
@@ -131,7 +132,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
           alt={movie.title}
           fill
           sizes="(max-width: 768px) 33vw, 300px"
-          onLoad={() => setIsImgLoaded(true)} // Khi tải xong thì ẩn skeleton
+          onLoad={() => setIsImgLoaded(true)}
           className={`object-cover transition-all duration-700 group-hover:scale-110 z-10 ${
             isImgLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'
           }`}
