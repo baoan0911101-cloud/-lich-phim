@@ -122,11 +122,12 @@ export default function MovieCard({ movie, index = 0, onClick }) {
             : '0 4px 12px rgba(0,0,0,0.3)',
         }}
       >
-        <img
-          src={movie.poster}
+        <Image
+          src={movie.poster || '/posters/default.jpg'} // Nhớ có ảnh default nếu link lỗi
           alt={movie.title}
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          fill
+          sizes="(max-width: 768px) 33vw, 250px" // Tối ưu kích thước load theo màn hình
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
 
         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
