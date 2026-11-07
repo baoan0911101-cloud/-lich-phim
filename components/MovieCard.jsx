@@ -30,8 +30,6 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     setLikeCount(movie.likes || 0);
   }, [movie.likes]);
 
-  // 🎯 BỎ HÀM handleMouseMove (Không còn xoay 3D để chống lag)
-
   const toggleLike = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -84,30 +82,43 @@ export default function MovieCard({ movie, index = 0, onClick }) {
       onMouseLeave={() => setIsHover(false)}
       onClick={handleCardClick}
     >
-      {/* ẢNH */}
+      {/* KHUNG ẢNH (Giữ nguyên kích thước, chỉ đổi viền/sáng nhẹ) */}
       <div
         ref={cardRef}
-        // 🎯 Chỉ dùng scale để nở ra, bỏ translateY để không bị giật khi lướt
-        className={`relative aspect-[2/3] md:aspect-[16/9] rounded-xl overflow-hidden bg-[#151d2e] transition-all duration-300 ease-out ${
-          isHover ? 'scale-[1.03] shadow-[0_10px_30px_rgba(0,0,0,0.6)] z-10' : 'scale-100 shadow-md z-0'
-        }`}
+        className="relative aspect-[2/3] md:aspect-[16/9] rounded-xl overflow-hidden bg-[#151d2e] transition-all duration-300 ease-out border border-white/5"
+        style={{
+          boxShadow: isHover ? '0 0 0 2px rgba(251,113,133,0.5), 0 10px 30px rgba(0,0,0,0.6)' : '0 2px 8px rgba(0,0,0,0.2)',
+        }}
       >
         {!isImgLoaded && (
           <div className="absolute inset-0 bg-[#1e293b] animate-pulse z-0" />
         )}
 
+        {/* 🎯 CHỈ PHÓNG TO ẢNH BÊN TRONG */}
         <Image
           src={movie.poster || 'https://placehold.co/300x450/151d2e/475569?text=No+Image'} 
           alt={movie.title}
           fill
           sizes="(max-width: 768px) 33vw, 300px"
           onLoad={() => setIsImgLoaded(true)}
-          className={`object-cover transition-transform duration-500 group-hover:scale-110 z-10 ${
-            isImgLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'
-          }`}
+          className={`object-cover transition-transform duration-500 ease-out z-10 ${
+            isHover ? 'scale-110' : 'scale-100'
+          } ${isImgLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'}`}
         />
 
-        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent pointer-events-none z-10" />
+        {/* Lớp phủ đen (Tối lên khi hover để nổi bật nút Play) */}
+        <div className={`absolute inset-0 bg-black/40 transition-opacity duration-300 z-10 pointer-events-none ${isHover ? 'opacity-100' : 'opacity-0'}`} />
+
+        {/* 🎯 NÚT PLAY Ở GIỮA (Hiện khi hover) */}
+        <div className={`absolute inset-0 flex items-center justify-center z-20 pointer-events-none transition-all duration-300 ${isHover ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+          <div className="w-12 h-12 rounded-full bg-rose-500/90 text-white flex items-center justify-center shadow-[0_0_20px_rgba(251,113,133,0.6)]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="ml-1">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 to-transparent pointer-events-none z-10" />
 
         {movie.season && (
           <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 z-20 whitespace-nowrap">
@@ -121,6 +132,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
           </div>
         )}
 
+        {/* NÚT THẢ TIM */}
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
@@ -150,7 +162,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
 
       {/* TEXT */}
       <div className="block mt-1.5 relative z-10">
-        <h3 className="text-[11px] font-semibold line-clamp-2 leading-tight text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
+        <h3 className={`text-[11px] font-semibold line-clamp-2 leading-tight transition-colors duration-300 ${isHover ? 'text-rose-300' : 'text-slate-100'}`}>
           {movie.title}
         </h3>
 
