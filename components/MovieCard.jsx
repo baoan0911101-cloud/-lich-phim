@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image'; // 🎯 Import Image của Next.js
 import { formatRelativeDate, formatFullDate, getDateBadgeColor } from '@/lib/formatDate';
 
 export default function MovieCard({ movie, index = 0, onClick }) {
@@ -7,6 +8,10 @@ export default function MovieCard({ movie, index = 0, onClick }) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(movie.likes || 0);
   const [isHover, setIsHover] = useState(false);
+  
+  // 🎯 State kiểm tra ảnh đã tải xong chưa để ẩn Skeleton
+  const [isImgLoaded, setIsImgLoaded] = useState(false);
+  
   const cardRef = useRef(null);
 
   // Đọc trạng thái "Đã lưu" từ localStorage
@@ -15,7 +20,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     setLiked(saved.includes(movie.id));
   }, [movie.id]);
 
-  // Lắng nghe sự kiện thay đổi (nếu có thay đổi từ nơi khác)
+  // Lắng nghe sự kiện thay đổi
   useEffect(() => {
     const handleChange = () => {
       const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
@@ -25,7 +30,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     return () => window.removeEventListener('savedMoviesChanged', handleChange);
   }, [movie.id]);
 
-  // Đồng bộ số lượt tim nếu props movie thay đổi
+  // Đồng bộ số lượt tim
   useEffect(() => {
     setLikeCount(movie.likes || 0);
   }, [movie.likes]);
@@ -52,15 +57,13 @@ export default function MovieCard({ movie, index = 0, onClick }) {
     e.preventDefault();
     e.stopPropagation();
 
-    const isUnliking = liked; // Nếu đang liked mà bấm -> là gỡ (unlike)
+    const isUnliking = liked;
     const newLikedState = !liked;
     const newCount = isUnliking ? Math.max(likeCount - 1, 0) : likeCount + 1;
 
-    // 1. Cập nhật UI ngay lập tức (Optimistic UI)
     setLiked(newLikedState);
     setLikeCount(newCount);
 
-    // 2. Cập nhật danh sách "Đã lưu" (savedMovies) trong localStorage
     const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
     let newSaved;
     
@@ -70,11 +73,8 @@ export default function MovieCard({ movie, index = 0, onClick }) {
       newSaved = [...saved, movie.id];
     }
     localStorage.setItem('savedMovies', JSON.stringify(newSaved));
-    
-    // Báo hiệu cho toàn bộ web biết danh sách Đã lưu vừa thay đổi
     window.dispatchEvent(new Event('savedMoviesChanged'));
 
-    // 3. Gọi API lưu vào Database (cộng/trừ lượt tim)
     try {
       await fetch('/api/movies/like', {
         method: 'POST',
@@ -95,8 +95,6 @@ export default function MovieCard({ movie, index = 0, onClick }) {
   };
 
   const dateColor = getDateBadgeColor(movie.updated_at || movie.created_at);
-
-  // Format số lượt tim (VD: 1200 -> 1.2k)
   const displayLikeCount = likeCount > 999 ? (likeCount / 1000).toFixed(1) + 'k' : likeCount;
 
   return (
@@ -122,24 +120,33 @@ export default function MovieCard({ movie, index = 0, onClick }) {
             : '0 4px 12px rgba(0,0,0,0.3)',
         }}
       >
+        {/* 🎯 KHUNG SKELETON (Hiện khi ảnh chưa tải xong) */}
+        {!isImgLoaded && (
+          <div className="absolute inset-0 bg-[#1e293b] animate-pulse z-0" />
+        )}
+
+        {/* 🎯 NEXT/IMAGE (Tự động nén ảnh, tối ưu tốc độ) */}
         <Image
-          src={movie.poster || '/posters/default.jpg'} // Nhớ có ảnh default nếu link lỗi
+          src={movie.poster || 'https://placehold.co/300x450/151d2e/475569?text=No+Image'} 
           alt={movie.title}
           fill
-          sizes="(max-width: 768px) 33vw, 250px" // Tối ưu kích thước load theo màn hình
-          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          sizes="(max-width: 768px) 33vw, 300px"
+          onLoad={() => setIsImgLoaded(true)} // Khi tải xong thì ẩn skeleton
+          className={`object-cover transition-all duration-700 group-hover:scale-110 z-10 ${
+            isImgLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'
+          }`}
         />
 
-        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent pointer-events-none z-10" />
 
         {movie.season && (
-          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 z-10 whitespace-nowrap">
+          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 z-20 whitespace-nowrap">
             {movie.season}
           </div>
         )}
 
         {movie.total_duration && (
-          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 flex items-center gap-0.5 z-10 whitespace-nowrap">
+          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full bg-black/70 backdrop-blur text-[9px] font-bold text-amber-300 flex items-center gap-0.5 z-20 whitespace-nowrap">
             ⏱ {movie.total_duration}
           </div>
         )}
@@ -148,7 +155,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
         <button
           onClick={toggleLike}
           aria-label="Lưu phim"
-          className="absolute top-1 right-1 z-20 h-6 px-1.5 rounded-full flex items-center gap-1 bg-black/60 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
+          className="absolute top-1 right-1 z-30 h-6 px-1.5 rounded-full flex items-center gap-1 bg-black/60 backdrop-blur border border-white/20 hover:scale-110 transition-transform"
         >
           <svg
             width="11"
@@ -173,7 +180,7 @@ export default function MovieCard({ movie, index = 0, onClick }) {
       </div>
 
       {/* TEXT */}
-      <div className="block mt-1.5">
+      <div className="block mt-1.5 relative z-10">
         <h3 className="text-[11px] font-semibold line-clamp-2 leading-tight text-slate-100 group-hover:text-rose-300 transition-colors duration-300">
           {movie.title}
         </h3>
