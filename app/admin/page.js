@@ -7,7 +7,7 @@ const LINK_COLORS = [
   { id: 'indigo', name: 'Tím', bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300' },
   { id: 'blue', name: 'Xanh đậm', bg: 'bg-blue-500/15', border: 'border-blue-500/40', text: 'text-blue-300' },
   { id: 'emerald', name: 'Xanh lá', bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-300' },
-  { id: 'rose', name: 'Hồng', bg: 'bg-rose-500/15', border: 'border-rose-500/40', text: 'text-rose-300' },
+  { id: 'rose', name: 'Xanh Tím', bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300' },
   { id: 'amber', name: 'Vàng', bg: 'bg-amber-500/15', border: 'border-amber-500/40', text: 'text-amber-300' },
   { id: 'red', name: 'Đỏ', bg: 'bg-red-500/15', border: 'border-red-500/40', text: 'text-red-300' },
   { id: 'pink', name: 'Hồng đậm', bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-300' },
