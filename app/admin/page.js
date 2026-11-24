@@ -13,6 +13,7 @@ const LINK_COLORS = [
   { id: 'pink', name: 'Hồng đậm', bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-300' },
   { id: 'purple', name: 'Tím đậm', bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-300' },
   { id: 'slate', name: 'Xám', bg: 'bg-slate-500/15', border: 'border-slate-500/40', text: 'text-slate-300' },
+  { id: 'indigo', name: 'Xanh Tím', bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300' },
 ];
 
 // 🎨 BẢNG ICON
@@ -20,7 +21,7 @@ const ICON_PRESETS = [
   { name: 'Telegram', path: '/icons/telegram.png', color: 'sky' },
   { name: 'Facebook', path: '/icons/facebook.png', color: 'blue' },
   { name: 'TikTok', path: '/icons/tiktok.png', color: 'slate' },
-  { name: 'Discord', path: '/icons/discord.png', color: 'rose' },
+  { name: 'Discord', path: '/icons/discord.png', color: 'indigo' },
   { name: 'Twitter', path: '/icons/twitter.png', color: 'sky' },
   { name: 'WhatsApp', path: '/icons/whatsapp.png', color: 'emerald' },
   { name: 'Reddit', path: '/icons/reddit.png', color: 'red' },
