@@ -20,7 +20,7 @@ const ICON_PRESETS = [
   { name: 'Telegram', path: '/icons/telegram.png', color: 'sky' },
   { name: 'Facebook', path: '/icons/facebook.png', color: 'blue' },
   { name: 'TikTok', path: '/icons/tiktok.png', color: 'slate' },
-  { name: 'Instagram', path: '/icons/instagram.png', color: 'pink' },
+  { name: 'Discord', path: '/icons/discord.png', color: 'pink' },
   { name: 'Twitter', path: '/icons/twitter.png', color: 'sky' },
   { name: 'WhatsApp', path: '/icons/whatsapp.png', color: 'emerald' },
   { name: 'Reddit', path: '/icons/reddit.png', color: 'red' },
