@@ -187,7 +187,7 @@ export default function AdminPage() {
     {
       name: 'Vào nhóm Discord',
       url: '',
-      color: 'sky',
+      color: 'indigo',
       icon: '/icons/discord.png',
     },
   ]);
@@ -239,7 +239,7 @@ export default function AdminPage() {
     {
       name: 'Vào nhóm Discord',
       url: '',
-      color: 'sky',
+      color: 'indigo',
       icon: '/icons/discord.png',
     },
   ]);
@@ -320,7 +320,7 @@ export default function AdminPage() {
       {
         name: 'Vào nhóm Discord',
         url: '',
-        color: 'sky',
+        color: 'indigo',
         icon: '/icons/discord.png',
       },
     ]);
@@ -362,7 +362,7 @@ export default function AdminPage() {
       {
         name: 'Vào nhóm Discord',
         url: '',
-        color: 'sky',
+        color: 'indigo',
         icon: '/icons/discord.png',
       },
     ]);
@@ -426,7 +426,7 @@ export default function AdminPage() {
         {
           name: 'Vào nhóm Discord',
           url: '',
-          color: 'sky',
+          color: 'indigo',
           icon: '/icons/discord.png',
         },
       ]);
@@ -460,7 +460,7 @@ export default function AdminPage() {
       {
         name: 'Vào nhóm Discord',
         url: '',
-        color: 'sky',
+        color: 'indigo',
         icon: '/icons/discord.png',
       },
     ];
