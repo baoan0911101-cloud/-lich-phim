@@ -185,10 +185,10 @@ export default function AdminPage() {
   ]);
   const [customLinks, setCustomLinks] = useState([
     {
-      name: 'Vào nhóm Telegram',
+      name: 'Vào nhóm Discord',
       url: '',
       color: 'sky',
-      icon: '/icons/telegram.png',
+      icon: '/icons/discord.png',
     },
   ]);
 
@@ -237,10 +237,10 @@ export default function AdminPage() {
   ]);
   const [editCustomLinks, setEditCustomLinks] = useState([
     {
-      name: 'Vào nhóm Telegram',
+      name: 'Vào nhóm Discord',
       url: '',
       color: 'sky',
-      icon: '/icons/telegram.png',
+      icon: '/icons/discord.png',
     },
   ]);
 
@@ -318,10 +318,10 @@ export default function AdminPage() {
     setSeasons([{ name: 'Phần 1', facebook: '', youtube: '' }]);
     setCustomLinks([
       {
-        name: 'Vào nhóm Telegram',
+        name: 'Vào nhóm Discord',
         url: '',
         color: 'sky',
-        icon: '/icons/telegram.png',
+        icon: '/icons/discord.png',
       },
     ]);
     setEditingId(null);
@@ -360,10 +360,10 @@ export default function AdminPage() {
     setEditSeasons([{ name: 'Phần 1', facebook: '', youtube: '' }]);
     setEditCustomLinks([
       {
-        name: 'Vào nhóm Telegram',
+        name: 'Vào nhóm Discord',
         url: '',
         color: 'sky',
-        icon: '/icons/telegram.png',
+        icon: '/icons/discord.png',
       },
     ]);
     setEditingScheduleId(null);
@@ -424,10 +424,10 @@ export default function AdminPage() {
     } else {
       setCustomLinks([
         {
-          name: 'Vào nhóm Telegram',
+          name: 'Vào nhóm Discord',
           url: '',
           color: 'sky',
-          icon: '/icons/telegram.png',
+          icon: '/icons/discord.png',
         },
       ]);
     }
@@ -458,10 +458,10 @@ export default function AdminPage() {
     let movieSeasons = [{ name: 'Phần 1', facebook: '', youtube: '' }];
     let movieLinks = [
       {
-        name: 'Vào nhóm Telegram',
+        name: 'Vào nhóm Discord',
         url: '',
         color: 'sky',
-        icon: '/icons/telegram.png',
+        icon: '/icons/discord.png',
       },
     ];
 
@@ -1991,7 +1991,7 @@ function MovieForm({
               <input
                 value={link.name}
                 onChange={(e) => updateCustomLink(i, 'name', e.target.value)}
-                placeholder="Tên (VD: Vào nhóm Telegram...)"
+                placeholder="Tên (VD: Vào nhóm Discord...)"
                 className="flex-1 h-9 rounded-lg bg-black/30 px-3 text-sm font-bold"
               />
               {customLinks.length > 1 && (
